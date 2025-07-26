@@ -22,11 +22,16 @@ jobs:
       with:
         node-version: '18'
         
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+        
     - name: Install dependencies
-      run: npm install
+      run: bun install
       
     - name: Generate photo manifest
-      run: node scripts/generate-photo-manifest.js
+      run: bun run generate-photos
       
     - name: Commit and push changes
       run: |
