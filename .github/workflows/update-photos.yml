@@ -4,8 +4,10 @@ on:
   push:
     paths:
       - 'public/photos/**'
+      - 'scripts/generate-photo-manifest.js'
     branches:
       - main
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
   update-manifest:
@@ -31,5 +33,5 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add public/photos/manifest.json public/photos/hero-manifest.json
-        git diff --quiet && git diff --staged --quiet || git commit -m "Update photo manifest"
+        git diff --quiet && git diff --staged --quiet || git commit -m "Update photo manifest - auto-generated categories and photos"
         git push

@@ -1,43 +1,53 @@
 import { Button } from '@/components/ui/button';
+import { usePhotos } from '@/contexts/PhotoContext';
 import { Instagram } from 'lucide-react';
-import { Category } from '@/contexts/PhotoContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-interface NavigationProps {
-  categories: Category[];
-  activeCategory: string;
-  onCategoryChange: (category: string) => void;
-}
+const Navigation = () => {
+  const { categories } = usePhotos();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-const Navigation = ({ categories, activeCategory, onCategoryChange }: NavigationProps) => {
+  const handleCategoryClick = (categorySlug: string) => {
+    if (categorySlug === 'all') {
+      navigate('/');
+    } else {
+      navigate(`/${categorySlug}`);
+    }
+  };
+
+  const getActiveCategory = () => {
+    const path = location.pathname;
+    if (path === '/') {
+      return 'all';
+    }
+    return path.substring(1);
+  };
+
+  const activeCategory = getActiveCategory();
+
   return (
-    <nav className="sticky top-0 z-50 bg-background/60 backdrop-blur-md border-b">
+    <nav className="sticky top-0 z-50 bg-background/60 backdrop-blur-md border-b border-border/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo/Brand */}
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              className="text-lg font-bold"
-              onClick={() => onCategoryChange('all')}
-            >
-              Noah Schifman
-            </Button>
-          </div>
-
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-1">
+          {/* Category Navigation */}
+          <div className="flex items-center space-x-2">
             <Button
               variant={activeCategory === 'all' ? 'default' : 'ghost'}
-              onClick={() => onCategoryChange('all')}
+              size="sm"
+              onClick={() => handleCategoryClick('all')}
+              className="text-sm font-medium"
             >
               All Photos
             </Button>
             
             {categories.map((category) => (
               <Button
-                key={category.slug}
+                key={category.id}
                 variant={activeCategory === category.slug ? 'default' : 'ghost'}
-                onClick={() => onCategoryChange(category.slug)}
+                size="sm"
+                onClick={() => handleCategoryClick(category.slug)}
+                className="text-sm font-medium"
               >
                 {category.name}
               </Button>
@@ -54,30 +64,6 @@ const Navigation = ({ categories, activeCategory, onCategoryChange }: Navigation
             >
               <Instagram className="h-5 w-5" />
             </a>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        <div className="md:hidden py-4 border-t">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={activeCategory === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onCategoryChange('all')}
-            >
-              All Photos
-            </Button>
-            
-            {categories.map((category) => (
-              <Button
-                key={category.slug}
-                variant={activeCategory === category.slug ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => onCategoryChange(category.slug)}
-              >
-                {category.name}
-              </Button>
-            ))}
           </div>
         </div>
       </div>

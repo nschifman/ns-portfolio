@@ -15,11 +15,9 @@ const Hero = () => {
           const manifest = await response.json();
           setHeroImages(manifest.heroImages || []);
         } else {
-          // Fallback to single hero image
           setHeroImages(['/photos/hero-background.jpg']);
         }
       } catch (error) {
-        // Fallback to single hero image
         setHeroImages(['/photos/hero-background.jpg']);
       }
     };
@@ -33,7 +31,7 @@ const Hero = () => {
 
     const interval = setInterval(() => {
       setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
-    }, 20000); // 20 seconds
+    }, 20000);
 
     return () => clearInterval(interval);
   }, [heroImages.length]);

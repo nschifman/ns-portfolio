@@ -16,13 +16,6 @@ export interface Category {
   orderIndex: number;
 }
 
-// Default categories with capitalized names
-const DEFAULT_CATEGORIES: Category[] = [
-  { id: '1', name: 'Street Photography', slug: 'street', orderIndex: 0 },
-  { id: '2', name: 'Wildlife', slug: 'wildlife', orderIndex: 1 },
-  { id: '3', name: 'Motorsport', slug: 'motorsport', orderIndex: 2 }
-];
-
 // Context interface
 interface PhotoContextType {
   photos: Photo[];
@@ -33,10 +26,42 @@ interface PhotoContextType {
 // Create context
 const PhotoContext = createContext<PhotoContextType | undefined>(undefined);
 
+// Security: Input validation and sanitization
+const sanitizeString = (input: string): string => {
+  if (typeof input !== 'string') return '';
+  return input
+    .replace(/[<>]/g, '') // Remove potential HTML tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/data:/gi, '') // Remove data: protocol
+    .trim()
+    .substring(0, 100); // Limit length
+};
+
+// Security: Validate image source
+const isValidImageSource = (src: string): boolean => {
+  if (typeof src !== 'string') return false;
+  
+  // Only allow relative paths starting with /photos/
+  const validPattern = /^\/photos\/[a-zA-Z0-9\s\-_\/]+\.(jpg|jpeg|png|gif|webp)$/i;
+  return validPattern.test(src);
+};
+
+// Helper function to convert category name to slug
+const categoryToSlug = (categoryName: string): string => {
+  const sanitized = sanitizeString(categoryName);
+  return sanitized.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+};
+
+// Helper function to convert slug back to category name
+const slugToCategory = (slug: string): string => {
+  const sanitized = sanitizeString(slug);
+  return sanitized.replace(/-/g, ' ');
+};
+
 // Provider component
 export function PhotoProvider({ children }: { children: ReactNode }) {
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   // Function to load photos from manifest
   const loadPhotos = async () => {
@@ -44,15 +69,54 @@ export function PhotoProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/photos/manifest.json');
       if (response.ok) {
         const manifest = await response.json();
-        setPhotos(manifest.photos || []);
-        console.log('Photos loaded:', manifest.photos?.length || 0);
+        
+        // Security: Validate and sanitize photo data
+        const validatedPhotos: Photo[] = [];
+        if (Array.isArray(manifest.photos)) {
+          manifest.photos.forEach((photo: any) => {
+            if (
+              photo &&
+              typeof photo === 'object' &&
+              isValidImageSource(photo.src) &&
+              typeof photo.alt === 'string' &&
+              typeof photo.category === 'string' &&
+              typeof photo.filename === 'string'
+            ) {
+              validatedPhotos.push({
+                id: sanitizeString(photo.id || `${photo.category}-${Date.now()}`),
+                src: photo.src,
+                alt: sanitizeString(photo.alt),
+                category: sanitizeString(photo.category),
+                filename: sanitizeString(photo.filename)
+              });
+            }
+          });
+        }
+        
+        setPhotos(validatedPhotos);
+        
+        // Generate categories automatically from photos
+        const categorySet = new Set<string>();
+        validatedPhotos.forEach((photo: Photo) => {
+          categorySet.add(photo.category);
+        });
+        
+        const autoCategories: Category[] = Array.from(categorySet).map((category, index) => ({
+          id: (index + 1).toString(),
+          name: category.replace(/([A-Z])/g, ' $1').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ').trim(),
+          slug: categoryToSlug(category),
+          orderIndex: index
+        }));
+        
+        setCategories(autoCategories);
       } else {
-        console.log('No photo manifest found, using empty gallery');
         setPhotos([]);
+        setCategories([]);
       }
     } catch (error) {
-      console.log('Failed to load photo manifest, using empty gallery');
+      console.error('Failed to load photos:', error);
       setPhotos([]);
+      setCategories([]);
     }
   };
 
@@ -63,7 +127,9 @@ export function PhotoProvider({ children }: { children: ReactNode }) {
 
   // Get photos by category
   const getPhotosByCategory = (categorySlug: string): Photo[] => {
-    return photos.filter(photo => photo.category === categorySlug);
+    const sanitizedSlug = sanitizeString(categorySlug);
+    const categoryName = slugToCategory(sanitizedSlug);
+    return photos.filter(photo => photo.category === categoryName);
   };
 
   const value: PhotoContextType = {
