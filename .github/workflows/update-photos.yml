@@ -1,0 +1,35 @@
+name: Update Photo Manifest
+
+on:
+  push:
+    paths:
+      - 'public/photos/**'
+    branches:
+      - main
+
+jobs:
+  update-manifest:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Generate photo manifest
+      run: node scripts/generate-photo-manifest.js
+      
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add public/photos/manifest.json public/photos/hero-manifest.json
+        git diff --quiet && git diff --staged --quiet || git commit -m "Update photo manifest"
+        git push
