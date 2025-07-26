@@ -1,7 +1,0 @@
-# ZIP 2: Public Assets
-# This will contain:
-# - public/ (excluding large photos)
-# - .htaccess, robots.txt, CNAME
-# - favicon.ico, placeholder.svg
-# - public/photos/manifest.json, hero-manifest.json
-# Estimated size: ~15KB 
