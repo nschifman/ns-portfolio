@@ -1,22 +1,21 @@
-# Disallow all crawlers from indexing this photography portfolio
+# Allow search engines to index the portfolio
 User-agent: *
-Disallow: /
+Allow: /
 
-# Prevent access to photo directories
-User-agent: *
-Disallow: /photos/
+# Allow access to main pages
+Allow: /index.html
+Allow: /
 
-# Prevent access to manifest files
-User-agent: *
+# Prevent access to manifest files (internal use only)
 Disallow: /photos/manifest.json
 Disallow: /photos/hero-manifest.json
 
-# Block image crawlers specifically
+# Allow image indexing for SEO
 User-agent: Googlebot-Image
-Disallow: /
+Allow: /
 
 User-agent: Bingbot
-Disallow: /
+Allow: /
 
-User-agent: *
-Disallow: /
+# Sitemap location
+Sitemap: https://nschifman.github.io/ns-portfolio/sitemap.xml

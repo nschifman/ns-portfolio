@@ -1,0 +1,10 @@
+# ZIP 1: Core Code Files
+# This will contain:
+# - src/ (all source code)
+# - package.json, vite.config.ts, tailwind.config.ts
+# - index.html, components.json
+# - scripts/ (generate-photo-manifest.js)
+# - .github/ (GitHub Actions)
+# - All config files (tsconfig, eslint, postcss)
+# - README.md, .gitignore
+# Estimated size: ~2MB 
