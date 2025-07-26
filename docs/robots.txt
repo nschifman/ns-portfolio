@@ -1,0 +1,22 @@
+# Disallow all crawlers from indexing this photography portfolio
+User-agent: *
+Disallow: /
+
+# Prevent access to photo directories
+User-agent: *
+Disallow: /photos/
+
+# Prevent access to manifest files
+User-agent: *
+Disallow: /photos/manifest.json
+Disallow: /photos/hero-manifest.json
+
+# Block image crawlers specifically
+User-agent: Googlebot-Image
+Disallow: /
+
+User-agent: Bingbot
+Disallow: /
+
+User-agent: *
+Disallow: /

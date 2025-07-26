@@ -1,0 +1,33 @@
+{
+  "photos": [
+    {
+      "id": "street photography-1",
+      "src": "/photos/street photography/1.jpg",
+      "alt": "1",
+      "category": "street photography",
+      "filename": "1"
+    },
+    {
+      "id": "street photography-2",
+      "src": "/photos/street photography/2.jpg",
+      "alt": "2",
+      "category": "street photography",
+      "filename": "2"
+    },
+    {
+      "id": "street photography-3",
+      "src": "/photos/street photography/3.jpg",
+      "alt": "3",
+      "category": "street photography",
+      "filename": "3"
+    },
+    {
+      "id": "test-1",
+      "src": "/photos/test/DSCF4206.jpg",
+      "alt": "DSCF4206",
+      "category": "test",
+      "filename": "DSCF4206"
+    }
+  ],
+  "lastUpdated": "2025-07-26T00:50:23.557Z"
+}
