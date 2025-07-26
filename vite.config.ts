@@ -4,7 +4,7 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' && process.env.GITHUB_PAGES ? '/ns-portfolio/' : '/',
+  base: mode === 'production' ? '/ns-portfolio/' : '/',
   server: {
     host: "::",
     port: 8080,
