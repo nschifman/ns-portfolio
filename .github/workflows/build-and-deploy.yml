@@ -5,6 +5,11 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -35,4 +40,5 @@ jobs:
         git config --local user.name "GitHub Action"
         git add docs
         git diff --quiet && git diff --staged --quiet || git commit -m "Update GitHub Pages build"
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/nschifman/ns-portfolio.git
         git push 
