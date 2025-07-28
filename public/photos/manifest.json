@@ -1,4 +1,71 @@
 {
-  "photos": [],
-  "lastUpdated": "2025-07-26T02:11:55.399Z"
+  "generated": "2025-07-28T22:51:06.822Z",
+  "totalPhotos": 6,
+  "categories": [
+    "landscapes",
+    "portraits",
+    "wildlife"
+  ],
+  "photos": [
+    {
+      "id": "landscapes-ocean-waves",
+      "src": "/test/photos/landscapes/ocean-waves.jpg",
+      "alt": "Ocean Waves",
+      "category": "landscapes",
+      "folder": "landscapes",
+      "filename": "ocean-waves.jpg",
+      "uploadedAt": "2025-07-28T22:51:06.821Z",
+      "views": 66
+    },
+    {
+      "id": "landscapes-sunset-mountain",
+      "src": "/test/photos/landscapes/sunset-mountain.jpg",
+      "alt": "Sunset Mountain",
+      "category": "landscapes",
+      "folder": "landscapes",
+      "filename": "sunset-mountain.jpg",
+      "uploadedAt": "2025-07-28T22:51:06.821Z",
+      "views": 52
+    },
+    {
+      "id": "portraits-model-shoot",
+      "src": "/test/photos/portraits/model-shoot.jpg",
+      "alt": "Model Shoot",
+      "category": "portraits",
+      "folder": "portraits",
+      "filename": "model-shoot.jpg",
+      "uploadedAt": "2025-07-28T22:51:06.821Z",
+      "views": 2
+    },
+    {
+      "id": "portraits-street-portrait",
+      "src": "/test/photos/portraits/street-portrait.jpg",
+      "alt": "Street Portrait",
+      "category": "portraits",
+      "folder": "portraits",
+      "filename": "street-portrait.jpg",
+      "uploadedAt": "2025-07-28T22:51:06.821Z",
+      "views": 5
+    },
+    {
+      "id": "wildlife-eagle-flight",
+      "src": "/test/photos/wildlife/eagle-flight.jpg",
+      "alt": "Eagle Flight",
+      "category": "wildlife",
+      "folder": "wildlife",
+      "filename": "eagle-flight.jpg",
+      "uploadedAt": "2025-07-28T22:51:06.821Z",
+      "views": 33
+    },
+    {
+      "id": "wildlife-lion-portrait",
+      "src": "/test/photos/wildlife/lion-portrait.jpg",
+      "alt": "Lion Portrait",
+      "category": "wildlife",
+      "folder": "wildlife",
+      "filename": "lion-portrait.jpg",
+      "uploadedAt": "2025-07-28T22:51:06.821Z",
+      "views": 96
+    }
+  ]
 }
