@@ -5,10 +5,10 @@ const path = require('path');
 import { S3Client, ListObjectsV2Command, HeadObjectCommand } from '@aws-sdk/client-s3';
 
 // Cloudflare R2 Configuration
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || 'your-account-id';
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || 'your-access-key-id';
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || 'your-secret-access-key';
-const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'noahschifman-photos';
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || '7afaf04ebcdccfd4fffc24938a03466d';
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || 'a01231f57659a44c10591c815bb94fae';
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || '8097c355c39c04be371378ce732c4c352d39a63757de580ef5e6d7f441c63482';
+const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'ns-portfolio-photos';
 
 // R2 endpoint URL
 const R2_ENDPOINT = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
@@ -27,7 +27,7 @@ const s3Client = new S3Client({
 const PHOTO_BASE_URL = '/photos';
 
 // Configuration - Update these for your Cloudflare R2 setup
-const R2_BUCKET_URL = process.env.R2_BUCKET_URL || '/photos';
+const R2_BUCKET_URL = process.env.R2_BUCKET_URL || `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET_NAME}`;
 const MANIFEST_PATH = path.join(__dirname, '../public/photos/manifest.json');
 
 // Supported image extensions
@@ -116,20 +116,28 @@ const generateManifest = async () => {
   
   console.log(`📸 Found ${imageFiles.length} photos in R2`);
   
+  // Generate manifest
   const photos = imageFiles.map(filePath => {
-    const filename = path.basename(filePath);
-    const category = filePath.split('/')[1] || 'uncategorized';
-    const src = `${R2_BUCKET_URL}${filePath}`; // R2 URL
+    // Remove bucket name prefix from path
+    const cleanPath = filePath.replace(`${R2_BUCKET_NAME}/`, '');
+    const filename = path.basename(cleanPath);
+    
+    // Extract category from folder path - look for folder name before the filename
+    const pathParts = cleanPath.split('/');
+    const category = pathParts.length > 1 ? pathParts[0] : 'uncategorized';
+    
+    // Build proper photo URL
+    const src = `${R2_BUCKET_URL}/${cleanPath}`;
     
     return {
-      id: generateId(filename, category),
+      id: `${category}-${filename.replace(/\.[^/.]+$/, '')}`,
       src,
       alt: generateAltText(filename),
       category,
       folder: category,
       filename,
-      uploadedAt: new Date().toISOString(), // Will be replaced with actual upload date
-      views: Math.floor(Math.random() * 100) // Will be replaced with actual view count
+      uploadedAt: new Date().toISOString(),
+      views: Math.floor(Math.random() * 100)
     };
   });
   

@@ -1,10 +1,181 @@
 {
-  "generated": "2025-07-28T23:50:00.000Z",
-  "totalPhotos": 0,
+  "generated": "2025-07-28T23:55:06.436Z",
+  "totalPhotos": 17,
   "categories": [
     "astrophotography",
     "street",
     "wildlife"
   ],
-  "photos": []
+  "photos": [
+    {
+      "id": "astrophotography-DSCF1277",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/astrophotography/DSCF1277.jpg",
+      "alt": "DSCF1277",
+      "category": "astrophotography",
+      "folder": "astrophotography",
+      "filename": "DSCF1277.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 96
+    },
+    {
+      "id": "astrophotography-untitled-30-3",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/astrophotography/untitled-30-3.jpg",
+      "alt": "Untitled 30 3",
+      "category": "astrophotography",
+      "folder": "astrophotography",
+      "filename": "untitled-30-3.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 38
+    },
+    {
+      "id": "hero-DSCF6701-Pano",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/hero/DSCF6701-Pano.jpg",
+      "alt": "DSCF6701 Pano",
+      "category": "hero",
+      "folder": "hero",
+      "filename": "DSCF6701-Pano.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 4
+    },
+    {
+      "id": "hero-DSCF7892",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/hero/DSCF7892.jpg",
+      "alt": "DSCF7892",
+      "category": "hero",
+      "folder": "hero",
+      "filename": "DSCF7892.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 28
+    },
+    {
+      "id": "street-DSCF1118",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/street/DSCF1118.jpg",
+      "alt": "DSCF1118",
+      "category": "street",
+      "folder": "street",
+      "filename": "DSCF1118.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 19
+    },
+    {
+      "id": "street-DSCF5119",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/street/DSCF5119.jpg",
+      "alt": "DSCF5119",
+      "category": "street",
+      "folder": "street",
+      "filename": "DSCF5119.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 33
+    },
+    {
+      "id": "street-DSCF5129",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/street/DSCF5129.jpg",
+      "alt": "DSCF5129",
+      "category": "street",
+      "folder": "street",
+      "filename": "DSCF5129.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 83
+    },
+    {
+      "id": "street-DSCF5139",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/street/DSCF5139.jpg",
+      "alt": "DSCF5139",
+      "category": "street",
+      "folder": "street",
+      "filename": "DSCF5139.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 20
+    },
+    {
+      "id": "street-PICT5356",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/street/PICT5356.jpg",
+      "alt": "PICT5356",
+      "category": "street",
+      "folder": "street",
+      "filename": "PICT5356.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 69
+    },
+    {
+      "id": "street-R1-00635-033A",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/street/R1-00635-033A.jpg",
+      "alt": "R1 00635 033A",
+      "category": "street",
+      "folder": "street",
+      "filename": "R1-00635-033A.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 34
+    },
+    {
+      "id": "wildlife-untitled-0424",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/wildlife/untitled-0424.jpg",
+      "alt": "Untitled 0424",
+      "category": "wildlife",
+      "folder": "wildlife",
+      "filename": "untitled-0424.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 5
+    },
+    {
+      "id": "wildlife-untitled-0764",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/wildlife/untitled-0764.jpg",
+      "alt": "Untitled 0764",
+      "category": "wildlife",
+      "folder": "wildlife",
+      "filename": "untitled-0764.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 56
+    },
+    {
+      "id": "wildlife-untitled-0844",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/wildlife/untitled-0844.jpg",
+      "alt": "Untitled 0844",
+      "category": "wildlife",
+      "folder": "wildlife",
+      "filename": "untitled-0844.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 74
+    },
+    {
+      "id": "wildlife-untitled-0875",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/wildlife/untitled-0875.jpg",
+      "alt": "Untitled 0875",
+      "category": "wildlife",
+      "folder": "wildlife",
+      "filename": "untitled-0875.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 26
+    },
+    {
+      "id": "wildlife-untitled-8103",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/wildlife/untitled-8103.jpg",
+      "alt": "Untitled 8103",
+      "category": "wildlife",
+      "folder": "wildlife",
+      "filename": "untitled-8103.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 14
+    },
+    {
+      "id": "wildlife-untitled-8239",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/wildlife/untitled-8239.jpg",
+      "alt": "Untitled 8239",
+      "category": "wildlife",
+      "folder": "wildlife",
+      "filename": "untitled-8239.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 1
+    },
+    {
+      "id": "wildlife-untitled-8443",
+      "src": "https://7afaf04ebcdccfd4fffc24938a03466d.r2.cloudflarestorage.com/ns-portfolio-photos/wildlife/untitled-8443.jpg",
+      "alt": "Untitled 8443",
+      "category": "wildlife",
+      "folder": "wildlife",
+      "filename": "untitled-8443.jpg",
+      "uploadedAt": "2025-07-28T23:55:06.435Z",
+      "views": 94
+    }
+  ]
 }

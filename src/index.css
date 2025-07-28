@@ -55,7 +55,7 @@ img {
   -o-user-drag: none;
   user-drag: none;
   pointer-events: auto;
-}
+  }
 
 /* Loading animation */
 @keyframes fadeIn {
@@ -71,7 +71,7 @@ img {
 @media (max-width: 640px) {
   .photo-grid {
     @apply grid-cols-1 gap-3;
-  }
+}
 
   .nav-button {
     @apply px-3 py-2 text-sm;
@@ -104,7 +104,7 @@ img {
 @media (min-width: 1280px) {
   .photo-grid {
     @apply grid-cols-4 gap-8;
-  }
+}
 }
 
 /* 2XL screen optimizations */
