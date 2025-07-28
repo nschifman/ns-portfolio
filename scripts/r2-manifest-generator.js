@@ -24,10 +24,10 @@ const s3Client = new S3Client({
 });
 
 // Base URL for photos (uses relative URLs to work with any domain)
-const PHOTO_BASE_URL = '/test/photos';
+const PHOTO_BASE_URL = '/photos';
 
 // Configuration - Update these for your Cloudflare R2 setup
-const R2_BUCKET_URL = process.env.R2_BUCKET_URL || '/test/photos';
+const R2_BUCKET_URL = process.env.R2_BUCKET_URL || '/photos';
 const MANIFEST_PATH = path.join(__dirname, '../public/photos/manifest.json');
 
 // Supported image extensions

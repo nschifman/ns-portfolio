@@ -44,7 +44,7 @@ function App() {
   return (
     <SecurityWrapper>
       <PhotoProvider>
-        <Router basename="/test">
+        <Router>
           <Routes>
             <Route path="/" element={<Gallery />} />
             <Route path="/:category" element={<Gallery />} />
