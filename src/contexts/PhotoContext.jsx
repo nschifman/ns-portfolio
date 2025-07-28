@@ -83,6 +83,17 @@ export const PhotoProvider = ({ children }) => {
         }
         
         const manifest = await response.json();
+        
+        // Check if we have real photos or just fake data
+        const hasRealPhotos = manifest.photos && manifest.photos.length > 0;
+        
+        if (!hasRealPhotos) {
+          console.log('No real photos found in manifest');
+          setError('No photos found. Please upload photos to R2 and regenerate manifest.');
+          setPhotos([]);
+          return;
+        }
+        
         const sortedPhotos = sortPhotos(manifest.photos || fallbackPhotos);
         setPhotos(sortedPhotos);
       } catch (err) {
@@ -100,7 +111,7 @@ export const PhotoProvider = ({ children }) => {
   }, []);
 
   const categories = React.useMemo(() => {
-    // Extract categories from photo paths/folders
+    // Extract categories from photo paths/folders, excluding 'hero'
     const uniqueCategories = [...new Set(photos.map(photo => {
       // If photo has a folder path, extract category from it
       if (photo.folder) {
@@ -109,7 +120,13 @@ export const PhotoProvider = ({ children }) => {
       // Fallback to category field
       return photo.category;
     }))];
-    return uniqueCategories.sort();
+    
+    // Filter out 'hero' folder - it's not a category
+    const filteredCategories = uniqueCategories.filter(category => 
+      category !== 'hero' && category !== 'Hero'
+    );
+    
+    return filteredCategories.sort();
   }, [photos]);
 
   const getPhotosByCategory = (category) => {

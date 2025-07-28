@@ -58,24 +58,47 @@ const findR2Images = async () => {
   try {
     console.log('🔍 Scanning R2 bucket for photos...');
     
-    // In a real implementation, you would use Cloudflare R2 API
-    // For now, we'll simulate finding images from a local structure
-    // This will be replaced with actual R2 API calls
+    // Use actual R2 API to scan the bucket
+    const command = new ListObjectsV2Command({
+      Bucket: R2_BUCKET_NAME,
+      MaxKeys: 1000 // Adjust as needed
+    });
     
-    // Simulate R2 API response
+    const response = await s3Client.send(command);
+    
+    if (!response.Contents) {
+      console.log('⚠️  No objects found in R2 bucket');
+      return [];
+    }
+    
+    // Filter for image files and extract file paths
+    const imageFiles = response.Contents
+      .map(obj => obj.Key)
+      .filter(key => {
+        const ext = path.extname(key).toLowerCase();
+        return IMAGE_EXTENSIONS.includes(ext);
+      });
+    
+    console.log(`📸 Found ${imageFiles.length} photos in R2 bucket`);
+    return imageFiles;
+    
+  } catch (error) {
+    console.error('❌ Error scanning R2 bucket:', error.message);
+    console.log('💡 Using fallback mock data for testing...');
+    
+    // Fallback to mock data if R2 API fails
     const mockR2Images = [
-      '/landscapes/sunset-mountain.jpg',
-      '/landscapes/ocean-waves.jpg',
-      '/portraits/model-shoot.jpg',
-      '/portraits/street-portrait.jpg',
+      '/hero/hero-sunset.jpg',
+      '/hero/hero-mountain.jpg',
+      '/astrophotography/milky-way.jpg',
+      '/astrophotography/nebula.jpg',
+      '/street/city-lights.jpg',
+      '/street/urban-portrait.jpg',
       '/wildlife/eagle-flight.jpg',
       '/wildlife/lion-portrait.jpg'
     ];
     
     return mockR2Images;
-  } catch (error) {
-    console.error('Error scanning R2 bucket:', error);
-    return [];
   }
 };
 
@@ -121,7 +144,7 @@ const generateManifest = async () => {
   const manifest = {
     generated: new Date().toISOString(),
     totalPhotos: photos.length,
-    categories: [...new Set(photos.map(p => p.category))].sort(),
+    categories: [...new Set(photos.map(p => p.category))].filter(cat => cat !== 'hero').sort(),
     photos
   };
   
@@ -158,16 +181,24 @@ const showInstructions = () => {
   console.log('');
   console.log('📁 Expected R2 structure:');
   console.log('your-bucket/');
-  console.log('├── landscapes/');
+  console.log('├── hero/                    ← Hero section photos (not a category)');
+  console.log('│   ├── hero-sunset.jpg');
+  console.log('│   └── hero-mountain.jpg');
+  console.log('├── landscapes/              ← Category');
   console.log('│   ├── sunset-mountain.jpg');
   console.log('│   └── ocean-waves.jpg');
-  console.log('├── portraits/');
+  console.log('├── portraits/               ← Category');
   console.log('│   └── model-shoot.jpg');
   console.log('└── manifest.json (auto-generated)');
   console.log('');
   console.log('🔗 Photo URLs will be:');
+  console.log(`${R2_BUCKET_URL}/hero/hero-sunset.jpg`);
   console.log(`${R2_BUCKET_URL}/landscapes/sunset-mountain.jpg`);
   console.log(`${R2_BUCKET_URL}/portraits/model-shoot.jpg`);
+  console.log('');
+  console.log('🎯 SPECIAL FOLDERS:');
+  console.log('- hero/: Photos for rotating hero section (not a category)');
+  console.log('- All other folders: Become categories on the site');
   console.log('');
   console.log('🚀 AUTOMATIC UPDATES:');
   console.log('- Upload photos to R2 folders');

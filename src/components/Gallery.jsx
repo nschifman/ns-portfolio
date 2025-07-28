@@ -59,7 +59,7 @@ function Gallery() {
 
   // Rotate hero photos every 20 seconds
   useEffect(() => {
-    const heroPhotos = getAllPhotos().slice(0, 5); // Use first 5 photos for hero
+    const heroPhotos = getPhotosByCategory('hero'); // Use photos from hero folder
     if (heroPhotos.length === 0) return;
 
     const interval = setInterval(() => {
@@ -67,7 +67,7 @@ function Gallery() {
     }, 20000); // 20 seconds
 
     return () => clearInterval(interval);
-  }, [getAllPhotos]);
+  }, [getPhotosByCategory]);
 
   if (loading) {
     return (
@@ -162,7 +162,7 @@ function Gallery() {
       <main className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 flex-1">
         {/* Hero Section with Photo Backdrop */}
         {!currentCategory && (() => {
-          const heroPhotos = getAllPhotos().slice(0, 5);
+          const heroPhotos = getPhotosByCategory('hero'); // Use photos from hero folder
           const currentHeroPhoto = heroPhotos[heroPhotoIndex];
           
           return (

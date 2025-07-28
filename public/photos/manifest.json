@@ -1,71 +1,10 @@
 {
-  "generated": "2025-07-28T23:34:24.992Z",
-  "totalPhotos": 6,
+  "generated": "2025-07-28T23:50:00.000Z",
+  "totalPhotos": 0,
   "categories": [
-    "landscapes",
-    "portraits",
+    "astrophotography",
+    "street",
     "wildlife"
   ],
-  "photos": [
-    {
-      "id": "landscapes-ocean-waves",
-      "src": "/photos/landscapes/ocean-waves.jpg",
-      "alt": "Ocean Waves",
-      "category": "landscapes",
-      "folder": "landscapes",
-      "filename": "ocean-waves.jpg",
-      "uploadedAt": "2025-07-28T23:34:24.992Z",
-      "views": 29
-    },
-    {
-      "id": "landscapes-sunset-mountain",
-      "src": "/photos/landscapes/sunset-mountain.jpg",
-      "alt": "Sunset Mountain",
-      "category": "landscapes",
-      "folder": "landscapes",
-      "filename": "sunset-mountain.jpg",
-      "uploadedAt": "2025-07-28T23:34:24.991Z",
-      "views": 14
-    },
-    {
-      "id": "portraits-model-shoot",
-      "src": "/photos/portraits/model-shoot.jpg",
-      "alt": "Model Shoot",
-      "category": "portraits",
-      "folder": "portraits",
-      "filename": "model-shoot.jpg",
-      "uploadedAt": "2025-07-28T23:34:24.992Z",
-      "views": 59
-    },
-    {
-      "id": "portraits-street-portrait",
-      "src": "/photos/portraits/street-portrait.jpg",
-      "alt": "Street Portrait",
-      "category": "portraits",
-      "folder": "portraits",
-      "filename": "street-portrait.jpg",
-      "uploadedAt": "2025-07-28T23:34:24.992Z",
-      "views": 79
-    },
-    {
-      "id": "wildlife-eagle-flight",
-      "src": "/photos/wildlife/eagle-flight.jpg",
-      "alt": "Eagle Flight",
-      "category": "wildlife",
-      "folder": "wildlife",
-      "filename": "eagle-flight.jpg",
-      "uploadedAt": "2025-07-28T23:34:24.992Z",
-      "views": 50
-    },
-    {
-      "id": "wildlife-lion-portrait",
-      "src": "/photos/wildlife/lion-portrait.jpg",
-      "alt": "Lion Portrait",
-      "category": "wildlife",
-      "folder": "wildlife",
-      "filename": "lion-portrait.jpg",
-      "uploadedAt": "2025-07-28T23:34:24.992Z",
-      "views": 8
-    }
-  ]
+  "photos": []
 }
