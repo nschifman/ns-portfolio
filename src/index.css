@@ -236,7 +236,8 @@ img {
               /* Performance optimizations */
               .photo-grid {
                 contain: layout style;
-                will-change: auto;
+                will-change: transform, opacity;
+                min-height: 200px; /* Prevent layout jumping */
               }
 
               /* Optimize lightbox performance */
@@ -247,6 +248,18 @@ img {
 
               /* Optimize navigation performance */
               nav {
+                contain: layout style;
+                will-change: auto;
+              }
+
+              /* Smooth category transitions */
+              .category-slide-enter {
+                opacity: 0;
+                transform: translateY(10px);
+              }
+
+              /* Prevent layout shifts during transitions */
+              main {
                 contain: layout style;
                 will-change: auto;
               }
