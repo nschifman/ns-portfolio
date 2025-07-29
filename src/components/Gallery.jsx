@@ -117,7 +117,7 @@ function Gallery() {
     };
   }, []);
 
-  // Optimized hero photo rotation with reduced frequency
+  // Optimized hero photo rotation with smoother transitions
   useEffect(() => {
     const heroPhotos = getPhotosByCategory('hero');
     if (heroPhotos.length === 0) return;
@@ -127,8 +127,8 @@ function Gallery() {
       setTimeout(() => {
         setHeroPhotoIndex((prev) => (prev + 1) % heroPhotos.length);
         setIsTransitioning(false);
-      }, 300); // Reduced transition time
-    }, 45000); // Increased to 45 seconds for better performance
+      }, 800); // Slower, smoother transition time
+    }, 60000); // Increased to 60 seconds for better performance
 
     return () => clearInterval(interval);
   }, [getPhotosByCategory]);

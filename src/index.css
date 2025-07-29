@@ -140,9 +140,9 @@
     @apply transition-colors duration-200 ease-in-out;
   }
 
-  /* Hero animation - optimized */
+  /* Hero animation - smoother transitions */
   .hero-fade {
-    @apply transition-opacity duration-500 ease-in-out;
+    @apply transition-opacity duration-1000 ease-in-out;
   }
 
   /* Scroll animations - removed heavy animations for better performance */
