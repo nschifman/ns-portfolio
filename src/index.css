@@ -331,6 +331,13 @@ img {
   }
 }
 
+/* Mobile dropdown menu */
+@media (max-width: 768px) {
+  .nav-button {
+    @apply px-2 py-1 text-xs;
+  }
+}
+
 /* Tablet optimizations */
 @media (min-width: 641px) and (max-width: 1024px) {
   .photo-grid {

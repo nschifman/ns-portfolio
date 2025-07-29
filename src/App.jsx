@@ -6,10 +6,7 @@ import DynamicMeta from './components/DynamicMeta';
 // Lazy load the Gallery component for better performance
 const Gallery = lazy(() => import('./components/Gallery'));
 
-            // Loading component - minimal to prevent flash
-            const LoadingSpinner = () => (
-              <div className="min-h-screen bg-black"></div>
-            );
+
 
 // Security wrapper to prevent right-click, drag, and keyboard shortcuts
 const SecurityWrapper = ({ children }) => {
@@ -54,7 +51,7 @@ const SecurityWrapper = ({ children }) => {
                   <PhotoProvider>
                     <Router>
                       <DynamicMeta />
-                      <Suspense fallback={<LoadingSpinner />}>
+                      <Suspense fallback={<div className="min-h-screen bg-black"></div>}>
                         <Routes>
                           <Route path="/" element={<Gallery />} />
                           <Route path="/:category" element={<Gallery />} />

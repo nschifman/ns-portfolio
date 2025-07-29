@@ -12,11 +12,37 @@ function Gallery() {
   const [visibleImages, setVisibleImages] = useState(new Set());
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isCategoryTransitioning, setIsCategoryTransitioning] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const observerRef = useRef(null);
   const observerOptions = useMemo(() => ({
     rootMargin: '100px 0px', // Increased for better performance
     threshold: 0.1
   }), []);
+
+  // Check if mobile and if categories need dropdown
+  useEffect(() => {
+    const checkMobile = () => {
+      const width = window.innerWidth;
+      setIsMobile(width <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMobileMenuOpen && !event.target.closest('.mobile-menu-container')) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobileMenuOpen]);
 
   // Get current category name from URL
   const currentCategory = category || '';
@@ -29,6 +55,7 @@ function Gallery() {
   // Handle category transitions smoothly
   useEffect(() => {
     setIsCategoryTransitioning(true);
+    setIsMobileMenuOpen(false); // Close mobile menu on category change
     const timer = setTimeout(() => {
       setIsCategoryTransitioning(false);
     }, 400); // Match the CSS transition duration
@@ -174,15 +201,7 @@ function Gallery() {
     return () => clearInterval(interval);
   }, [getPhotosByCategory]);
 
-  // Memoized loading component
-  const LoadingSpinner = useMemo(() => (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p className="text-gray-400">Loading your portfolio...</p>
-      </div>
-    </div>
-  ), []);
+
 
   // Memoized error component
   const ErrorComponent = useMemo(() => (
@@ -210,7 +229,7 @@ function Gallery() {
     </div>
   ), []);
 
-  if (loading) return LoadingSpinner;
+  if (loading) return <div className="min-h-screen bg-black"></div>;
   if (error) return ErrorComponent;
   if (photos.length === 0) return EmptyStateComponent;
 
@@ -227,24 +246,75 @@ function Gallery() {
 
             {/* Category Navigation - Center */}
             <div className="flex justify-center">
-              <div className="flex items-center space-x-3 overflow-x-auto px-4">
-                <Link
-                  to="/"
-                  className={`nav-button whitespace-nowrap ${!currentCategory ? 'nav-button-active' : 'nav-button-inactive'}`}
-                >
-                  All Photos
-                </Link>
-                
-                {categories.map((cat) => (
+              {isMobile ? (
+                // Mobile navigation with dropdown
+                <div className="relative mobile-menu-container">
+                  <div className="flex items-center space-x-2">
+                    {/* Home button */}
+                    <Link
+                      to="/"
+                      className={`nav-button ${!currentCategory ? 'nav-button-active' : 'nav-button-inactive'}`}
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                      </svg>
+                    </Link>
+                    
+                    {/* Dropdown button */}
+                    <button
+                      onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                      className="nav-button-inactive flex items-center space-x-1"
+                    >
+                      <span className="text-xs">Categories</span>
+                      <svg className={`h-3 w-3 transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  {/* Dropdown menu */}
+                  {isMobileMenuOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-48 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg z-50">
+                      {categories.map((cat) => (
+                        <Link
+                          key={cat}
+                          to={`/${cat}`}
+                          className={`block px-4 py-2 text-sm transition-colors duration-200 ${
+                            currentCategory === cat 
+                              ? 'bg-blue-500/80 text-white' 
+                              : 'text-gray-300 hover:bg-gray-700/70 hover:text-white'
+                          }`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          {cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Desktop navigation
+                <div className="flex items-center space-x-3 overflow-x-auto px-4">
                   <Link
-                    key={cat}
-                    to={`/${cat}`}
-                    className={`nav-button whitespace-nowrap ${currentCategory === cat ? 'nav-button-active' : 'nav-button-inactive'}`}
+                    to="/"
+                    className={`nav-button whitespace-nowrap ${!currentCategory ? 'nav-button-active' : 'nav-button-inactive'}`}
                   >
-                    {cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
                   </Link>
-                ))}
-              </div>
+                  
+                  {categories.map((cat) => (
+                    <Link
+                      key={cat}
+                      to={`/${cat}`}
+                      className={`nav-button whitespace-nowrap ${currentCategory === cat ? 'nav-button-active' : 'nav-button-inactive'}`}
+                    >
+                      {cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Instagram Link - Right */}

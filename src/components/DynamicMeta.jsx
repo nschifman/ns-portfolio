@@ -10,9 +10,7 @@ const DynamicMeta = () => {
         const metaData = await response.json();
         
         // Update title
-        if (metaData.title) {
-          document.title = metaData.title;
-        }
+        document.title = "Noah Schifman Photography";
         
         // Update meta description
         const descriptionMeta = document.querySelector('meta[name="description"]');
