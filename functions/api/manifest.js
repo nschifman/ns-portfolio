@@ -1,5 +1,4 @@
 import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
-import path from 'path';
 
 // R2 Configuration
 const R2_ACCOUNT_ID = '7afaf04ebcdccfd4fffc24938a03466d';
@@ -19,9 +18,27 @@ const s3Client = new S3Client({
   },
 });
 
+// Helper function to get file extension
+const getFileExtension = (filename) => {
+  const lastDot = filename.lastIndexOf('.');
+  return lastDot > 0 ? filename.substring(lastDot).toLowerCase() : '';
+};
+
+// Helper function to get filename without extension
+const getFilenameWithoutExt = (filename) => {
+  const lastDot = filename.lastIndexOf('.');
+  return lastDot > 0 ? filename.substring(0, lastDot) : filename;
+};
+
+// Helper function to get basename (filename) from path
+const getBasename = (filePath) => {
+  const lastSlash = filePath.lastIndexOf('/');
+  return lastSlash >= 0 ? filePath.substring(lastSlash + 1) : filePath;
+};
+
 // Helper function to generate alt text from filename
 const generateAltText = (filename) => {
-  const nameWithoutExt = path.basename(filename, path.extname(filename));
+  const nameWithoutExt = getFilenameWithoutExt(filename);
   return nameWithoutExt.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
@@ -44,7 +61,7 @@ const findR2Images = async () => {
     const imageFiles = response.Contents
       .map(obj => obj.Key)
       .filter(key => {
-        const ext = path.extname(key).toLowerCase();
+        const ext = getFileExtension(key);
         return imageExtensions.includes(ext);
       });
 
@@ -80,7 +97,7 @@ export async function onRequest(context) {
     const photos = imageFiles.map(filePath => {
       // Remove bucket name prefix from path
       const cleanPath = filePath.replace(`${R2_BUCKET_NAME}/`, '');
-      const filename = path.basename(cleanPath);
+      const filename = getBasename(cleanPath);
       
       // Extract category from folder path
       const pathParts = cleanPath.split('/');
@@ -90,7 +107,7 @@ export async function onRequest(context) {
       const src = `${R2_BUCKET_URL}/${cleanPath}`;
       
       return {
-        id: `${category}-${filename.replace(/\.[^/.]+$/, '')}`,
+        id: `${category}-${getFilenameWithoutExt(filename)}`,
         src,
         alt: generateAltText(filename),
         category,
