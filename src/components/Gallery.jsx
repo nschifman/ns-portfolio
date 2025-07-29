@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 function Gallery() {
   const { category } = useParams();
-  const { photos, categories, loading, error, getPhotosByCategory, getAllPhotos } = usePhotos();
+  const { photos, categories, loading, error, getPhotosByCategory, getAllPhotos, refreshPhotos } = usePhotos();
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [lightboxSize, setLightboxSize] = useState({ width: 0, height: 0 });
   const [heroPhotoIndex, setHeroPhotoIndex] = useState(0);
@@ -142,7 +142,16 @@ function Gallery() {
             </div>
 
             {/* Instagram Link - Right */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex items-center space-x-4">
+              <button
+                onClick={refreshPhotos}
+                className="text-gray-400 hover:text-white transition-colors p-2"
+                title="Refresh photos"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
               <a
                 href="https://instagram.com/nschify"
                 target="_blank"

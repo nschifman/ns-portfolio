@@ -77,6 +77,10 @@ export async function onRequest(context) {
   try {
     console.log('🔄 Generating manifest on-demand...');
     
+    // Check if we should bypass cache
+    const url = new URL(context.request.url);
+    const forceRefresh = url.searchParams.get('refresh') === 'true';
+    
     const imageFiles = await findR2Images();
     
     if (imageFiles.length === 0) {
@@ -88,7 +92,7 @@ export async function onRequest(context) {
       }), {
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=300' // Cache for 5 minutes
+          'Cache-Control': forceRefresh ? 'no-cache, no-store, must-revalidate' : 'public, max-age=5'
         }
       });
     }
@@ -135,7 +139,7 @@ export async function onRequest(context) {
     return new Response(JSON.stringify(manifest), {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=300' // Cache for 5 minutes
+        'Cache-Control': forceRefresh ? 'no-cache, no-store, must-revalidate' : 'public, max-age=5'
       }
     });
 

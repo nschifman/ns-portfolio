@@ -45,37 +45,42 @@ export const PhotoProvider = ({ children }) => {
     });
   };
 
-  useEffect(() => {
-    const loadPhotos = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Load photo manifest from dynamic API
-        const response = await fetch('/api/manifest');
-        if (!response.ok) {
-          throw new Error('Failed to load manifest');
-        }
-        
-        const manifest = await response.json();
-        
-        if (!manifest.photos || manifest.photos.length === 0) {
-          setError('No photos found. Please upload photos to R2.');
-          setPhotos([]);
-          return;
-        }
-        
-        const sortedPhotos = sortPhotos(manifest.photos);
-        setPhotos(sortedPhotos);
-      } catch (err) {
-        console.error('Error loading photos:', err);
-        setError('Failed to load photos. Please try refreshing the page.');
-        setPhotos([]);
-      } finally {
-        setLoading(false);
+  const loadPhotos = async (forceRefresh = false) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Load photo manifest from dynamic API
+      const url = forceRefresh ? '/api/manifest?refresh=true' : '/api/manifest';
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to load manifest');
       }
-    };
+      
+      const manifest = await response.json();
+      
+      if (!manifest.photos || manifest.photos.length === 0) {
+        setError('No photos found. Please upload photos to R2.');
+        setPhotos([]);
+        return;
+      }
+      
+      const sortedPhotos = sortPhotos(manifest.photos);
+      setPhotos(sortedPhotos);
+    } catch (err) {
+      console.error('Error loading photos:', err);
+      setError('Failed to load photos. Please try refreshing the page.');
+      setPhotos([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const refreshPhotos = () => {
+    loadPhotos(true);
+  };
+
+  useEffect(() => {
     loadPhotos();
   }, []);
 
@@ -121,6 +126,7 @@ export const PhotoProvider = ({ children }) => {
     error,
     getPhotosByCategory,
     getAllPhotos,
+    refreshPhotos,
   };
 
   return (
