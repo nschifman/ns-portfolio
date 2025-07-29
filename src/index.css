@@ -10,6 +10,9 @@
 }
 
 @layer components {
+  .scale-102 {
+    transform: scale(1.02);
+  }
   .photo-grid {
     @apply gap-2 sm:gap-3 lg:gap-4;
     columns: 2;
@@ -92,6 +95,7 @@
     /* Optimize image rendering */
     image-rendering: auto;
     backface-visibility: hidden;
+    transition: opacity 0.3s ease-in-out, transform 0.6s ease-out;
   }
 
   .photo-item picture {
@@ -107,7 +111,8 @@
   }
 
   .photo-item img {
-    @apply w-full h-full object-cover transition-opacity duration-300;
+    @apply w-full h-full object-cover;
+    transition: opacity 0.3s ease-in-out, transform 0.6s ease-out;
   }
 
   .photo-item img:not([src]) {
@@ -283,6 +288,12 @@ img {
               html {
                 overflow-y: scroll;
               }
+              
+              /* Prevent scrollbar flash during loading */
+              body {
+                overflow-y: scroll;
+                scrollbar-gutter: stable;
+              }
 
               /* Smooth category transitions */
               .page-transition {
@@ -335,6 +346,19 @@ img {
 @media (max-width: 768px) {
   .nav-button {
     @apply px-2 py-1 text-xs;
+  }
+  
+  /* Mobile navigation improvements */
+  .mobile-menu-container {
+    position: relative;
+  }
+  
+  .mobile-menu-container button {
+    @apply transition-all duration-200;
+  }
+  
+  .mobile-menu-container button:hover {
+    @apply bg-gray-700/80;
   }
 }
 

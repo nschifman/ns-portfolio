@@ -239,9 +239,20 @@ function Gallery() {
       <nav className="sticky top-0 z-40 bg-black/95 backdrop-blur-sm border-b border-gray-800">
         <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="grid grid-cols-3 items-center h-20">
-            {/* Name - Left */}
+            {/* Home Button - Left */}
             <div className="flex justify-start">
-              <h2 className="text-lg font-semibold text-gray-300">Noah Schifman</h2>
+              {isMobile ? (
+                <Link
+                  to="/"
+                  className={`nav-button ${!currentCategory ? 'nav-button-active' : 'nav-button-inactive'}`}
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                </Link>
+              ) : (
+                <h2 className="text-lg font-semibold text-gray-300">Noah Schifman</h2>
+              )}
             </div>
 
             {/* Category Navigation - Center */}
@@ -249,24 +260,14 @@ function Gallery() {
               {isMobile ? (
                 // Mobile navigation with dropdown
                 <div className="relative mobile-menu-container">
-                  <div className="flex items-center space-x-2">
-                    {/* Home button */}
-                    <Link
-                      to="/"
-                      className={`nav-button ${!currentCategory ? 'nav-button-active' : 'nav-button-inactive'}`}
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                      </svg>
-                    </Link>
-                    
+                  <div className="flex items-center justify-center">
                     {/* Dropdown button */}
                     <button
                       onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                      className="nav-button-inactive flex items-center space-x-1"
+                      className="nav-button-inactive flex items-center space-x-2 px-4 py-2 rounded-lg"
                     >
-                      <span className="text-xs">Categories</span>
-                      <svg className={`h-3 w-3 transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <span className="text-sm font-medium">Categories</span>
+                      <svg className={`h-4 w-4 transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
@@ -274,21 +275,23 @@ function Gallery() {
                   
                   {/* Dropdown menu */}
                   {isMobileMenuOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-48 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg z-50">
-                      {categories.map((cat) => (
-                        <Link
-                          key={cat}
-                          to={`/${cat}`}
-                          className={`block px-4 py-2 text-sm transition-colors duration-200 ${
-                            currentCategory === cat 
-                              ? 'bg-blue-500/80 text-white' 
-                              : 'text-gray-300 hover:bg-gray-700/70 hover:text-white'
-                          }`}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          {cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                        </Link>
-                      ))}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 w-56 bg-gray-900/98 backdrop-blur-md border border-gray-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+                      <div className="py-2">
+                        {categories.map((cat) => (
+                          <Link
+                            key={cat}
+                            to={`/${cat}`}
+                            className={`block px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                              currentCategory === cat 
+                                ? 'bg-blue-500/90 text-white shadow-lg' 
+                                : 'text-gray-300 hover:bg-gray-800/80 hover:text-white'
+                            }`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            {cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -445,7 +448,7 @@ function Gallery() {
                       <img
                         src={photo.previewSrc || photo.src}
                         alt={photo.alt}
-                        className={`w-full h-full object-cover transition-opacity duration-300 group-hover:scale-105 ${
+                        className={`w-full h-full object-cover group-hover:scale-102 ${
                           isLoaded ? 'opacity-100' : 'opacity-0'
                         }`}
                         loading="lazy"
