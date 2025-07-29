@@ -252,7 +252,7 @@ img {
                 }
               }
 
-              /* Custom scrollbar */
+              /* Custom scrollbar - always visible to prevent layout shifts */
               ::-webkit-scrollbar {
                 width: 8px;
                 height: 8px;
@@ -273,10 +273,43 @@ img {
                 background: rgba(255, 255, 255, 0.3);
               }
 
-              /* Firefox scrollbar */
+              /* Firefox scrollbar - always visible */
               * {
                 scrollbar-width: thin;
                 scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.1);
+              }
+
+              /* Force scrollbar to always be visible */
+              html {
+                overflow-y: scroll;
+              }
+
+              /* Smooth category transitions */
+              .page-transition {
+                @apply transition-all duration-500 ease-in-out;
+              }
+
+              /* Category slide animation */
+              .category-slide-enter {
+                opacity: 0;
+                transform: translateX(20px);
+              }
+
+              .category-slide-enter-active {
+                opacity: 1;
+                transform: translateX(0);
+                transition: opacity 400ms ease-out, transform 400ms ease-out;
+              }
+
+              .category-slide-exit {
+                opacity: 1;
+                transform: translateX(0);
+              }
+
+              .category-slide-exit-active {
+                opacity: 0;
+                transform: translateX(-20px);
+                transition: opacity 400ms ease-in, transform 400ms ease-in;
               }
 
 /* Mobile optimizations */

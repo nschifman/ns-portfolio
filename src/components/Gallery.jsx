@@ -11,6 +11,7 @@ function Gallery() {
   const [loadedImages, setLoadedImages] = useState(new Set());
   const [visibleImages, setVisibleImages] = useState(new Set());
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isCategoryTransitioning, setIsCategoryTransitioning] = useState(false);
   const observerRef = useRef(null);
   const observerOptions = useMemo(() => ({
     rootMargin: '100px 0px', // Increased for better performance
@@ -24,6 +25,16 @@ function Gallery() {
   const currentPhotos = useMemo(() => {
     return currentCategory ? getPhotosByCategory(currentCategory) : getAllPhotos();
   }, [currentCategory, getPhotosByCategory, getAllPhotos]);
+
+  // Handle category transitions smoothly
+  useEffect(() => {
+    setIsCategoryTransitioning(true);
+    const timer = setTimeout(() => {
+      setIsCategoryTransitioning(false);
+    }, 400); // Match the CSS transition duration
+    
+    return () => clearTimeout(timer);
+  }, [currentCategory]);
 
   // Preload first few images for better initial load experience
   useEffect(() => {
@@ -258,7 +269,9 @@ function Gallery() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 flex-1 page-transition">
+      <main className={`max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 flex-1 page-transition ${
+        isCategoryTransitioning ? 'category-slide-enter' : ''
+      }`}>
         {/* Hero Section with Photo Backdrop */}
         {!currentCategory && (() => {
           const heroPhotos = getPhotosByCategory('hero');
@@ -308,7 +321,9 @@ function Gallery() {
         
         {/* Category Title */}
         {currentCategory && (
-          <div className="mb-6">
+          <div className={`mb-6 transition-all duration-400 ease-in-out ${
+            isCategoryTransitioning ? 'opacity-50 transform translate-x-2' : 'opacity-100 transform translate-x-0'
+          }`}>
             <h2 className="text-2xl font-medium text-white mb-1">
               {currentCategory.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
             </h2>
@@ -320,7 +335,9 @@ function Gallery() {
         
         {/* Photo Grid */}
         {currentPhotos.length > 0 ? (
-          <div className="photo-grid">
+          <div className={`photo-grid transition-all duration-400 ease-in-out ${
+            isCategoryTransitioning ? 'opacity-50 transform translate-x-2' : 'opacity-100 transform translate-x-0'
+          }`}>
             {currentPhotos.map((photo) => {
               const isVisible = visibleImages.has(photo.id);
               const isLoaded = loadedImages.has(photo.id);
