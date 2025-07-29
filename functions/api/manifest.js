@@ -8,7 +8,7 @@ import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
               const R2_SECRET_ACCESS_KEY = context.env.R2_SECRET_ACCESS_KEY || '8097c355c39c04be371378ce732c4c352d39a63757de580ef5e6d7f441c63482';
               const R2_BUCKET_NAME = context.env.R2_BUCKET_NAME || 'ns-portfolio-photos';
               const CURRENT_DOMAIN = context.env.CURRENT_DOMAIN || 'noahschifman.com'; // Updated to new domain
-              const R2_BUCKET_URL = `https://photos.${CURRENT_DOMAIN}`;
+              const R2_BUCKET_URL = `https://photos.noahschifman.com`;
 
               return {
                 s3Client: new S3Client({

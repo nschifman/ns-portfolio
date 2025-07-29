@@ -62,7 +62,7 @@ const DynamicMeta = () => {
               "https://instagram.com/nschify"
             ],
             "description": metaData.description,
-            "image": "https://photos.000279.xyz/hero/DSCF6701-Pano.jpg",
+            "image": "https://photos.noahschifman.com/hero/DSCF6701-Pano.jpg",
             "knowsAbout": [
               "Photography",
               ...metaData.categories.map(cat => `${cat.charAt(0).toUpperCase() + cat.slice(1)} Photography`)
