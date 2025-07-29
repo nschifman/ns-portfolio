@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { usePhotos } from '../contexts/PhotoContext';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 function Gallery() {
   const { category } = useParams();
@@ -12,30 +12,45 @@ function Gallery() {
   const [visibleImages, setVisibleImages] = useState(new Set());
   const [isTransitioning, setIsTransitioning] = useState(false);
   const observerRef = useRef(null);
+  const observerOptions = useMemo(() => ({
+    rootMargin: '100px 0px', // Increased for better performance
+    threshold: 0.1
+  }), []);
 
   // Get current category name from URL
   const currentCategory = category || '';
   
   // Get photos for current category or all photos if no category
-  const currentPhotos = currentCategory ? getPhotosByCategory(currentCategory) : getAllPhotos();
+  const currentPhotos = useMemo(() => {
+    return currentCategory ? getPhotosByCategory(currentCategory) : getAllPhotos();
+  }, [currentCategory, getPhotosByCategory, getAllPhotos]);
 
-  // Intersection Observer for scroll-based loading
+  // Optimized Intersection Observer for scroll-based loading
   useEffect(() => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
     observerRef.current = new IntersectionObserver(
       (entries) => {
+        const newVisibleImages = new Set(visibleImages);
+        let hasChanges = false;
+        
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const photoId = entry.target.dataset.photoId;
-            if (photoId) {
-              setVisibleImages(prev => new Set(prev).add(photoId));
+            if (photoId && !newVisibleImages.has(photoId)) {
+              newVisibleImages.add(photoId);
+              hasChanges = true;
             }
           }
         });
+        
+        if (hasChanges) {
+          setVisibleImages(newVisibleImages);
+        }
       },
-      {
-        rootMargin: '50px 0px',
-        threshold: 0.1
-      }
+      observerOptions
     );
 
     return () => {
@@ -43,24 +58,27 @@ function Gallery() {
         observerRef.current.disconnect();
       }
     };
-  }, []);
+  }, [observerOptions, visibleImages]);
 
-  // Handle image load
+  // Handle image load with debouncing
   const handleImageLoad = useCallback((photoId) => {
-    setLoadedImages(prev => new Set(prev).add(photoId));
+    setLoadedImages(prev => {
+      if (prev.has(photoId)) return prev;
+      return new Set(prev).add(photoId);
+    });
   }, []);
 
   // Handle photo click for lightbox
-  const handlePhotoClick = (photo) => {
+  const handlePhotoClick = useCallback((photo) => {
     setSelectedPhoto(photo);
     document.body.style.overflow = 'hidden'; // Prevent background scroll
-  };
+  }, []);
 
   // Close lightbox
-  const closeLightbox = () => {
+  const closeLightbox = useCallback(() => {
     setSelectedPhoto(null);
     document.body.style.overflow = 'auto'; // Restore scroll
-  };
+  }, []);
 
   // Handle escape key
   useEffect(() => {
@@ -72,29 +90,36 @@ function Gallery() {
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [selectedPhoto]);
+  }, [selectedPhoto, closeLightbox]);
 
-  // Calculate lightbox size for responsive fit
+  // Calculate lightbox size for responsive fit with debouncing
   useEffect(() => {
+    let timeoutId;
     const updateLightboxSize = () => {
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-      const padding = 16; // 8px on each side for mobile, 16px for desktop
-      
-      setLightboxSize({
-        width: windowWidth - padding,
-        height: windowHeight - padding
-      });
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const padding = windowWidth <= 640 ? 16 : 32; // Responsive padding
+        
+        setLightboxSize({
+          width: windowWidth - padding,
+          height: windowHeight - padding
+        });
+      }, 100); // Debounce resize events
     };
 
     updateLightboxSize();
     window.addEventListener('resize', updateLightboxSize);
-    return () => window.removeEventListener('resize', updateLightboxSize);
+    return () => {
+      window.removeEventListener('resize', updateLightboxSize);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
-  // Rotate hero photos every 30 seconds with smooth transitions
+  // Optimized hero photo rotation with reduced frequency
   useEffect(() => {
-    const heroPhotos = getPhotosByCategory('hero'); // Use photos from hero folder
+    const heroPhotos = getPhotosByCategory('hero');
     if (heroPhotos.length === 0) return;
 
     const interval = setInterval(() => {
@@ -102,56 +127,57 @@ function Gallery() {
       setTimeout(() => {
         setHeroPhotoIndex((prev) => (prev + 1) % heroPhotos.length);
         setIsTransitioning(false);
-      }, 500); // Half second fade transition
-    }, 30000); // 30 seconds
+      }, 300); // Reduced transition time
+    }, 45000); // Increased to 45 seconds for better performance
 
     return () => clearInterval(interval);
   }, [getPhotosByCategory]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading your portfolio...</p>
-        </div>
+  // Memoized loading component
+  const LoadingSpinner = useMemo(() => (
+    <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p className="text-gray-400">Loading your portfolio...</p>
       </div>
-    );
-  }
+    </div>
+  ), []);
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Something went wrong</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
+  // Memoized error component
+  const ErrorComponent = useMemo(() => (
+    <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-white mb-4">Something went wrong</h1>
+        <p className="text-gray-400 mb-4">{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        >
+          Try Again
+        </button>
       </div>
-    );
-  }
+    </div>
+  ), [error]);
 
-  if (photos.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">No photos found</h1>
-          <p className="text-gray-600 dark:text-gray-400">Add some photos to get started!</p>
-        </div>
+  // Memoized empty state component
+  const EmptyStateComponent = useMemo(() => (
+    <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-white mb-4">No photos found</h1>
+        <p className="text-gray-400">Add some photos to get started!</p>
       </div>
-    );
-  }
+    </div>
+  ), []);
+
+  if (loading) return LoadingSpinner;
+  if (error) return ErrorComponent;
+  if (photos.length === 0) return EmptyStateComponent;
 
   return (
     <div className="min-h-screen bg-black transition-colors duration-200 flex flex-col">
       {/* Navigation */}
       <nav className="sticky top-0 z-40 bg-black/95 backdrop-blur-sm border-b border-gray-800">
-                          <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+        <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="flex items-center justify-between h-20">
             {/* Name - Left */}
             <div className="flex-shrink-0">
@@ -202,7 +228,7 @@ function Gallery() {
       <main className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 flex-1 page-transition">
         {/* Hero Section with Photo Backdrop */}
         {!currentCategory && (() => {
-          const heroPhotos = getPhotosByCategory('hero'); // Use photos from hero folder
+          const heroPhotos = getPhotosByCategory('hero');
           const currentHeroPhoto = heroPhotos[heroPhotoIndex];
           
           return (
@@ -259,17 +285,17 @@ function Gallery() {
           </div>
         )}
         
-                {/* Photo Grid */}
+        {/* Photo Grid */}
         {currentPhotos.length > 0 ? (
           <div className="photo-grid">
-            {currentPhotos.map((photo, index) => {
+            {currentPhotos.map((photo) => {
               const isVisible = visibleImages.has(photo.id);
               const isLoaded = loadedImages.has(photo.id);
               
               return (
                 <div
                   key={photo.id}
-                  className={`photo-item group fade-in-on-scroll ${isVisible ? 'visible' : ''}`}
+                  className={`photo-item group ${isVisible ? 'visible' : ''}`}
                   data-photo-id={photo.id}
                   ref={(el) => {
                     if (el && observerRef.current) {
@@ -299,7 +325,7 @@ function Gallery() {
                       <img
                         src={photo.previewSrc || photo.src}
                         alt={photo.alt}
-                        className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+                        className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${
                           isLoaded ? 'opacity-100' : 'opacity-0'
                         }`}
                         loading="lazy"
@@ -311,7 +337,7 @@ function Gallery() {
                     </picture>
                   )}
                 
-                                  <div className="photo-overlay group-hover:bg-black/20">
+                  <div className="photo-overlay group-hover:bg-black/20">
                     <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
                       <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
@@ -321,10 +347,10 @@ function Gallery() {
                 </div>
               );
             })}
-            </div>
+          </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-600 dark:text-gray-400">No photos in this category yet.</p>
+            <p className="text-gray-400">No photos in this category yet.</p>
             {categories.length > 0 && (
               <Link 
                 to="/" 
@@ -339,17 +365,17 @@ function Gallery() {
 
       {/* Footer */}
       <footer className="bg-black border-t border-gray-800 py-8 mt-auto">
-                  <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 text-center">
+        <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 text-center">
           <p className="text-gray-500 mb-4 text-sm">
             © {new Date().getFullYear()} Noah Schifman. All rights reserved.
           </p>
-                      <div className="flex justify-center space-x-6">
-              <a
-                href="https://instagram.com/nschify"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
+          <div className="flex justify-center space-x-6">
+            <a
+              href="https://instagram.com/nschify"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
               <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
               </svg>
@@ -357,8 +383,6 @@ function Gallery() {
           </div>
         </div>
       </footer>
-
-
 
       {/* Responsive Lightbox */}
       {selectedPhoto && (

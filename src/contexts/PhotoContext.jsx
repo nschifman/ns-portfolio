@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 
 const PhotoContext = createContext();
 
@@ -17,8 +17,10 @@ export const PhotoProvider = ({ children }) => {
   const [lastFetch, setLastFetch] = useState(0);
   const [cacheTimeout, setCacheTimeout] = useState(5 * 60 * 1000); // 5 minutes in ms
 
-  // Sorting algorithm: 50% views, 50% recency
-  const sortPhotos = (photoList) => {
+  // Memoized sorting algorithm: 50% views, 50% recency
+  const sortPhotos = useCallback((photoList) => {
+    if (!photoList || photoList.length === 0) return photoList;
+    
     return photoList.sort((a, b) => {
       const now = new Date();
       const aAge = (now - new Date(a.uploadedAt || a.createdAt || now)) / (1000 * 60 * 60 * 24); // days
@@ -45,9 +47,9 @@ export const PhotoProvider = ({ children }) => {
       
       return bScore - aScore; // Higher score first
     });
-  };
+  }, []);
 
-  const loadPhotos = async (forceRefresh = false) => {
+  const loadPhotos = useCallback(async (forceRefresh = false) => {
     try {
       // Check if we should use cached data
       const now = Date.now();
@@ -102,17 +104,20 @@ export const PhotoProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [photos.length, lastFetch, cacheTimeout, sortPhotos]);
 
-  const refreshPhotos = () => {
+  const refreshPhotos = useCallback(() => {
     loadPhotos(true);
-  };
+  }, [loadPhotos]);
 
   useEffect(() => {
     loadPhotos();
-  }, []);
+  }, [loadPhotos]);
 
-  const categories = React.useMemo(() => {
+  // Memoized categories computation
+  const categories = useMemo(() => {
+    if (photos.length === 0) return [];
+    
     // Extract categories from photo paths/folders, excluding 'hero'
     const uniqueCategories = [...new Set(photos.map(photo => {
       // If photo has a folder path, extract category from it
@@ -144,23 +149,29 @@ export const PhotoProvider = ({ children }) => {
     });
   }, [photos]);
 
-  const getPhotosByCategory = (category) => {
+  // Memoized photo filtering functions
+  const getPhotosByCategory = useCallback((category) => {
+    if (!category || photos.length === 0) return [];
+    
     return photos.filter(photo => {
       // Check folder first, then category field
       const photoCategory = photo.folder || photo.category;
       return photoCategory === category;
     });
-  };
+  }, [photos]);
 
-  const getAllPhotos = () => {
+  const getAllPhotos = useCallback(() => {
+    if (photos.length === 0) return [];
+    
     // Exclude hero photos from the main gallery
     return photos.filter(photo => {
       const photoCategory = photo.folder || photo.category;
       return photoCategory !== 'hero' && photoCategory !== 'Hero';
     });
-  };
+  }, [photos]);
 
-  const value = {
+  // Memoized context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     photos,
     categories,
     loading,
@@ -168,7 +179,7 @@ export const PhotoProvider = ({ children }) => {
     getPhotosByCategory,
     getAllPhotos,
     refreshPhotos,
-  };
+  }), [photos, categories, loading, error, getPhotosByCategory, getAllPhotos, refreshPhotos]);
 
   return (
     <PhotoContext.Provider value={value}>
