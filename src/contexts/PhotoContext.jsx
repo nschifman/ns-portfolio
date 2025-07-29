@@ -119,7 +119,20 @@ export const PhotoProvider = ({ children }) => {
       category !== 'hero' && category !== 'Hero'
     );
     
-    return filteredCategories.sort();
+    // Sort categories by number of photos (descending)
+    return filteredCategories.sort((a, b) => {
+      const aCount = photos.filter(photo => {
+        const photoCategory = photo.folder || photo.category;
+        return photoCategory === a;
+      }).length;
+      
+      const bCount = photos.filter(photo => {
+        const photoCategory = photo.folder || photo.category;
+        return photoCategory === b;
+      }).length;
+      
+      return bCount - aCount; // Descending order (most photos first)
+    });
   }, [photos]);
 
   const getPhotosByCategory = (category) => {
