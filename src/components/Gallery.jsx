@@ -186,7 +186,7 @@ function Gallery() {
 
             {/* Category Navigation - Center */}
             <div className="flex justify-center">
-              <div className="flex items-center space-x-3 overflow-x-auto px-4 max-w-md">
+              <div className="flex items-center space-x-3 overflow-x-auto px-4">
                 <Link
                   to="/"
                   className={`nav-button whitespace-nowrap ${!currentCategory ? 'nav-button-active' : 'nav-button-inactive'}`}
