@@ -135,6 +135,19 @@
     @apply bg-gray-700/60 text-gray-300 hover:bg-gray-600/70 hover:text-white shadow-md;
   }
 
+  /* Responsive navigation improvements */
+  @media (max-width: 768px) {
+    .nav-button {
+      @apply px-2 py-1 text-xs;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .nav-button {
+      @apply px-1 py-1 text-xs;
+    }
+  }
+
   /* Smooth page transitions - reduced duration for better performance */
   .page-transition {
     @apply transition-colors duration-200 ease-in-out;

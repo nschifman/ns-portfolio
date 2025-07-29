@@ -178,15 +178,15 @@ function Gallery() {
       {/* Navigation */}
       <nav className="sticky top-0 z-40 bg-black/95 backdrop-blur-sm border-b border-gray-800">
         <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-          <div className="flex items-center justify-between h-20">
+          <div className="grid grid-cols-3 items-center h-20">
             {/* Name - Left */}
-            <div className="flex-shrink-0">
+            <div className="flex justify-start">
               <h2 className="text-lg font-semibold text-gray-300">Noah Schifman</h2>
             </div>
 
             {/* Category Navigation - Center */}
-            <div className="flex-1 flex justify-center items-center">
-              <div className="flex items-center space-x-3 overflow-x-auto px-4">
+            <div className="flex justify-center">
+              <div className="flex items-center space-x-3 overflow-x-auto px-4 max-w-md">
                 <Link
                   to="/"
                   className={`nav-button whitespace-nowrap ${!currentCategory ? 'nav-button-active' : 'nav-button-inactive'}`}
@@ -207,7 +207,7 @@ function Gallery() {
             </div>
 
             {/* Instagram Link - Right */}
-            <div className="flex-shrink-0 flex items-center space-x-3">
+            <div className="flex justify-end items-center space-x-3">
               <span className="text-gray-400/70 text-lg font-medium">Contact me!</span>
               <a
                 href="https://instagram.com/nschify"
