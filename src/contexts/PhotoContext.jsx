@@ -64,15 +64,17 @@ export const PhotoProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      // Load photo manifest from dynamic API with timeout
+      // Load photo manifest from dynamic API with optimized timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced to 8 seconds
       
       const url = forceRefresh ? '/api/manifest?refresh=true' : '/api/manifest';
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
-          'Cache-Control': forceRefresh ? 'no-cache' : 'max-age=300'
+          'Cache-Control': forceRefresh ? 'no-cache' : 'max-age=600', // Increased cache time
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip, deflate, br'
         }
       });
       

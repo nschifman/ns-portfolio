@@ -10,9 +10,11 @@ function Gallery() {
   const [heroPhotoIndex, setHeroPhotoIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState(new Set());
   const [visibleImages, setVisibleImages] = useState(new Set());
+  const [preloadedFullSize, setPreloadedFullSize] = useState(new Set());
   const [isCategoryTransitioning, setIsCategoryTransitioning] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isSiteFullyLoaded, setIsSiteFullyLoaded] = useState(false);
   const observerRef = useRef(null);
   const observerOptions = useMemo(() => ({
     rootMargin: '100px 0px', // Increased for better performance
@@ -31,17 +33,43 @@ function Gallery() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Close mobile menu when clicking outside
+  // Mark site as fully loaded after initial render
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isMobileMenuOpen && !event.target.closest('.mobile-menu-container')) {
-        setIsMobileMenuOpen(false);
+    const timer = setTimeout(() => {
+      setIsSiteFullyLoaded(true);
+    }, 1000); // Wait 1 second after initial load
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Background preloader for visible full-size images
+  useEffect(() => {
+    if (!isSiteFullyLoaded || currentPhotos.length === 0) return;
+
+    const preloadVisibleFullSize = async () => {
+      const visiblePhotoIds = Array.from(visibleImages);
+      const photosToPreload = currentPhotos.filter(photo => 
+        visiblePhotoIds.includes(photo.id) && !preloadedFullSize.has(photo.id)
+      );
+
+      // Preload full-size images for visible photos
+      for (const photo of photosToPreload) {
+        try {
+          const img = new Image();
+          img.src = photo.src;
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+          });
+          setPreloadedFullSize(prev => new Set(prev).add(photo.id));
+        } catch (error) {
+          console.warn('Failed to preload full-size image:', photo.id);
+        }
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isMobileMenuOpen]);
+    preloadVisibleFullSize();
+  }, [isSiteFullyLoaded, visibleImages, currentPhotos, preloadedFullSize]);
 
   // Get current category name from URL
   const currentCategory = category || '';
@@ -197,6 +225,17 @@ function Gallery() {
     return () => clearInterval(interval);
   }, [getPhotosByCategory]);
 
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMobileMenuOpen && !event.target.closest('.mobile-menu-container')) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobileMenuOpen]);
 
 
   // Memoized error component

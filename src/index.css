@@ -6,6 +6,16 @@
   body {
     @apply bg-black text-white;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Optimize for performance */
+    text-rendering: optimizeSpeed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Optimize image rendering */
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 }
 
@@ -62,17 +72,19 @@
   }
 
   .photo-item {
-    @apply relative overflow-hidden rounded-lg cursor-pointer transition-transform duration-300 mb-2 sm:mb-3 lg:mb-4;
+    @apply relative overflow-hidden rounded-lg cursor-pointer mb-2 sm:mb-3 lg:mb-4;
     break-inside: avoid;
     display: block;
     width: 100%;
     page-break-inside: avoid;
     /* Optimize for performance */
-    will-change: auto;
+    will-change: transform;
     transform: translateZ(0);
     /* Improve loading performance */
     content-visibility: auto;
     contain-intrinsic-size: 0 500px;
+    /* Optimize paint and layout */
+    contain: layout style paint;
   }
 
   /* Mobile optimizations */
@@ -190,7 +202,10 @@ img {
 
               /* Optimize image loading transitions */
               .photo-item img {
-                transition: opacity 0.3s ease-in-out;
+                transition: opacity 0.3s ease-in-out, transform 0.8s ease-out;
+                /* Optimize rendering */
+                backface-visibility: hidden;
+                -webkit-backface-visibility: hidden;
               }
 
               /* Optimize hero images */
@@ -216,6 +231,24 @@ img {
                   animation-iteration-count: 1 !important;
                   transition-duration: 0.01ms !important;
                 }
+              }
+
+              /* Performance optimizations */
+              .photo-grid {
+                contain: layout style;
+                will-change: auto;
+              }
+
+              /* Optimize lightbox performance */
+              .lightbox {
+                contain: layout style paint;
+                will-change: transform;
+              }
+
+              /* Optimize navigation performance */
+              nav {
+                contain: layout style;
+                will-change: auto;
               }
 
               /* Custom scrollbar - always visible to prevent layout shifts */
