@@ -209,16 +209,34 @@ function Gallery() {
             <div className="relative -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12 2xl:-mx-16 mb-8 sm:mb-12">
               <div className="relative h-80 sm:h-96 lg:h-[28rem] xl:h-[32rem] overflow-hidden">
                 {currentHeroPhoto && (
-                  <img
-                    src={currentHeroPhoto.previewSrc || currentHeroPhoto.src}
-                    alt={currentHeroPhoto.alt}
-                    className={`absolute inset-0 w-full h-full object-cover hero-fade ${
-                      isTransitioning ? 'opacity-50' : 'opacity-100'
-                    }`}
-                    loading="eager"
-                    decoding="async"
-                    fetchPriority="high"
-                  />
+                  <picture>
+                    {/* Mobile (up to 640px) */}
+                    <source
+                      media="(max-width: 640px)"
+                      srcSet={currentHeroPhoto.mobilePreviewSrc || currentHeroPhoto.previewSrc || currentHeroPhoto.src}
+                    />
+                    {/* Tablet (641px to 1024px) */}
+                    <source
+                      media="(min-width: 641px) and (max-width: 1024px)"
+                      srcSet={currentHeroPhoto.tabletPreviewSrc || currentHeroPhoto.previewSrc || currentHeroPhoto.src}
+                    />
+                    {/* Desktop (1025px and up) */}
+                    <source
+                      media="(min-width: 1025px)"
+                      srcSet={currentHeroPhoto.desktopPreviewSrc || currentHeroPhoto.previewSrc || currentHeroPhoto.src}
+                    />
+                    {/* Fallback */}
+                    <img
+                      src={currentHeroPhoto.previewSrc || currentHeroPhoto.src}
+                      alt={currentHeroPhoto.alt}
+                      className={`absolute inset-0 w-full h-full object-cover hero-fade ${
+                        isTransitioning ? 'opacity-50' : 'opacity-100'
+                      }`}
+                      loading="eager"
+                      decoding="async"
+                      fetchPriority="high"
+                    />
+                  </picture>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/50 z-10"></div>
                 <div className="relative z-20 flex items-center justify-center h-full px-4">
@@ -261,18 +279,36 @@ function Gallery() {
                   onClick={() => handlePhotoClick(photo)}
                 >
                   {isVisible && (
-                    <img
-                      src={photo.previewSrc || photo.src}
-                      alt={photo.alt}
-                      className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
-                        isLoaded ? 'opacity-100' : 'opacity-0'
-                      }`}
-                      loading="lazy"
-                      decoding="async"
-                      onLoad={() => handleImageLoad(photo.id)}
-                      onContextMenu={(e) => e.preventDefault()}
-                      onDragStart={(e) => e.preventDefault()}
-                    />
+                    <picture>
+                      {/* Mobile (up to 640px) */}
+                      <source
+                        media="(max-width: 640px)"
+                        srcSet={photo.mobilePreviewSrc || photo.previewSrc || photo.src}
+                      />
+                      {/* Tablet (641px to 1024px) */}
+                      <source
+                        media="(min-width: 641px) and (max-width: 1024px)"
+                        srcSet={photo.tabletPreviewSrc || photo.previewSrc || photo.src}
+                      />
+                      {/* Desktop (1025px and up) */}
+                      <source
+                        media="(min-width: 1025px)"
+                        srcSet={photo.desktopPreviewSrc || photo.previewSrc || photo.src}
+                      />
+                      {/* Fallback */}
+                      <img
+                        src={photo.previewSrc || photo.src}
+                        alt={photo.alt}
+                        className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+                          isLoaded ? 'opacity-100' : 'opacity-0'
+                        }`}
+                        loading="lazy"
+                        decoding="async"
+                        onLoad={() => handleImageLoad(photo.id)}
+                        onContextMenu={(e) => e.preventDefault()}
+                        onDragStart={(e) => e.preventDefault()}
+                      />
+                    </picture>
                   )}
                 
                                   <div className="photo-overlay group-hover:bg-black/20">

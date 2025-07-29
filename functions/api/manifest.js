@@ -123,14 +123,20 @@ const generateAltText = (filename) => {
       const pathParts = cleanPath.split('/');
       const category = pathParts.length > 1 ? pathParts[0] : 'uncategorized';
       
-                        // Build proper photo URLs - high quality for lightbox, compressed for previews
+                        // Build proper photo URLs - high quality for lightbox, responsive previews
                   const src = `${R2_BUCKET_URL}/${cleanPath}`;
                   const previewSrc = `${R2_BUCKET_URL}/${cleanPath}?width=400&quality=70&format=webp`;
+                  const mobilePreviewSrc = `${R2_BUCKET_URL}/${cleanPath}?width=300&quality=60&format=webp`;
+                  const tabletPreviewSrc = `${R2_BUCKET_URL}/${cleanPath}?width=350&quality=65&format=webp`;
+                  const desktopPreviewSrc = `${R2_BUCKET_URL}/${cleanPath}?width=450&quality=75&format=webp`;
                   
                   return {
                     id: `${category}-${getFilenameWithoutExt(filename)}`,
                     src, // High quality for lightbox
-                    previewSrc, // Compressed for grid previews
+                    previewSrc, // Default compressed for grid previews
+                    mobilePreviewSrc, // Mobile optimized
+                    tabletPreviewSrc, // Tablet optimized
+                    desktopPreviewSrc, // Desktop optimized
                     alt: generateAltText(filename),
                     category,
                     folder: category,
