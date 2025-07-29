@@ -51,8 +51,8 @@ export const PhotoProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         
-        // Load photo manifest
-        const response = await fetch('/photos/manifest.json');
+        // Load photo manifest from dynamic API
+        const response = await fetch('/api/manifest');
         if (!response.ok) {
           throw new Error('Failed to load manifest');
         }
@@ -60,7 +60,7 @@ export const PhotoProvider = ({ children }) => {
         const manifest = await response.json();
         
         if (!manifest.photos || manifest.photos.length === 0) {
-          setError('No photos found. Please upload photos to R2 and regenerate manifest.');
+          setError('No photos found. Please upload photos to R2.');
           setPhotos([]);
           return;
         }
