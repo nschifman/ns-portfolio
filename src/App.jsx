@@ -5,15 +5,10 @@ import { PhotoProvider } from './contexts/PhotoContext';
 // Lazy load the Gallery component for better performance
 const Gallery = lazy(() => import('./components/Gallery'));
 
-// Loading component
-const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center bg-black">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-      <p className="text-gray-400">Loading your portfolio...</p>
-    </div>
-  </div>
-);
+            // Loading component - minimal to prevent flash
+            const LoadingSpinner = () => (
+              <div className="min-h-screen bg-black"></div>
+            );
 
 // Security wrapper to prevent right-click, drag, and keyboard shortcuts
 const SecurityWrapper = ({ children }) => {

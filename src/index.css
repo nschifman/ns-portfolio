@@ -144,10 +144,23 @@ img {
   animation: shimmer 1.5s infinite;
 }
 
-/* Photo grid loading states */
-.photo-item:not(.visible) {
-  @apply shimmer;
-}
+              /* Photo grid loading states */
+              .photo-item:not(.visible) {
+                @apply shimmer;
+              }
+
+              /* Performance optimizations */
+              .photo-item img {
+                will-change: transform;
+                backface-visibility: hidden;
+                transform: translateZ(0);
+              }
+
+              /* Optimize hero images */
+              .hero-fade {
+                will-change: opacity;
+                backface-visibility: hidden;
+              }
 
 /* Mobile optimizations */
 @media (max-width: 640px) {

@@ -114,19 +114,21 @@ export async function onRequest(context) {
       const pathParts = cleanPath.split('/');
       const category = pathParts.length > 1 ? pathParts[0] : 'uncategorized';
       
-      // Build proper photo URL
-      const src = `${R2_BUCKET_URL}/${cleanPath}`;
-      
-      return {
-        id: `${category}-${getFilenameWithoutExt(filename)}`,
-        src,
-        alt: generateAltText(filename),
-        category,
-        folder: category,
-        filename,
-        uploadedAt: new Date().toISOString(),
-        views: Math.floor(Math.random() * 100)
-      };
+                        // Build proper photo URLs - high quality for lightbox, compressed for previews
+                  const src = `${R2_BUCKET_URL}/${cleanPath}`;
+                  const previewSrc = `${R2_BUCKET_URL}/${cleanPath}?width=400&quality=70&format=webp`;
+                  
+                  return {
+                    id: `${category}-${getFilenameWithoutExt(filename)}`,
+                    src, // High quality for lightbox
+                    previewSrc, // Compressed for grid previews
+                    alt: generateAltText(filename),
+                    category,
+                    folder: category,
+                    filename,
+                    uploadedAt: new Date().toISOString(),
+                    views: Math.floor(Math.random() * 100)
+                  };
     });
 
     // Extract unique categories, excluding 'hero'

@@ -210,7 +210,7 @@ function Gallery() {
               <div className="relative h-80 sm:h-96 lg:h-[28rem] xl:h-[32rem] overflow-hidden">
                 {currentHeroPhoto && (
                   <img
-                    src={currentHeroPhoto.src}
+                    src={currentHeroPhoto.previewSrc || currentHeroPhoto.src}
                     alt={currentHeroPhoto.alt}
                     className={`absolute inset-0 w-full h-full object-cover hero-fade ${
                       isTransitioning ? 'opacity-50' : 'opacity-100'
@@ -262,7 +262,7 @@ function Gallery() {
                 >
                   {isVisible && (
                     <img
-                      src={photo.src}
+                      src={photo.previewSrc || photo.src}
                       alt={photo.alt}
                       className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
                         isLoaded ? 'opacity-100' : 'opacity-0'
