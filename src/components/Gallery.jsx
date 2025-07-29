@@ -207,13 +207,13 @@ function Gallery() {
                 onClick={() => handlePhotoClick(photo)}
               >
                                             <img
-                              src={photo.src}
-                              alt={photo.alt}
-                              className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-105"
-                              loading="lazy"
-                              onContextMenu={(e) => e.preventDefault()}
-                              onDragStart={(e) => e.preventDefault()}
-                            />
+                  src={photo.src}
+                  alt={photo.alt}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                />
                 
                 <div className="photo-overlay group-hover:bg-black/20">
                   <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">

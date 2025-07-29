@@ -11,11 +11,16 @@
 
 @layer components {
   .photo-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4;
   }
 
   .photo-item {
-    @apply relative overflow-hidden rounded-lg bg-gray-800 cursor-pointer transition-all duration-300 hover:scale-[1.02];
+    @apply relative overflow-hidden rounded-lg cursor-pointer transition-all duration-300 hover:scale-[1.02];
+    aspect-ratio: 3/2;
+  }
+
+  .photo-item img {
+    @apply w-full h-full object-cover;
   }
 
   .photo-overlay {

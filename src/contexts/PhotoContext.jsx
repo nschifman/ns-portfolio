@@ -107,7 +107,11 @@ export const PhotoProvider = ({ children }) => {
   };
 
   const getAllPhotos = () => {
-    return photos;
+    // Exclude hero photos from the main gallery
+    return photos.filter(photo => {
+      const photoCategory = photo.folder || photo.category;
+      return photoCategory !== 'hero' && photoCategory !== 'Hero';
+    });
   };
 
   const value = {
