@@ -66,4 +66,4 @@ const SecurityWrapper = ({ children }) => {
               );
             }
 
-export default App; fa
+export default App;
