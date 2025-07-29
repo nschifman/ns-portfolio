@@ -20,7 +20,15 @@
   }
 
   .photo-item img {
-    @apply w-full h-full object-cover;
+    @apply w-full h-full object-cover transition-all duration-300;
+  }
+
+  .photo-item img:not([src]) {
+    @apply opacity-0;
+  }
+
+  .photo-item img[src] {
+    @apply opacity-100;
   }
 
   .photo-overlay {

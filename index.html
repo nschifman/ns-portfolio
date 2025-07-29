@@ -33,6 +33,13 @@
     <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
     
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/api/manifest" as="fetch" crossorigin>
+    <link rel="dns-prefetch" href="https://photos.000279.xyz">
+    
+    <!-- Performance optimizations -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
     <!-- Structured Data -->
     <script type="application/ld+json">
     {

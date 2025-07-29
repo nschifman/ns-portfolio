@@ -14,6 +14,8 @@ export const PhotoProvider = ({ children }) => {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastFetch, setLastFetch] = useState(0);
+  const [cacheTimeout, setCacheTimeout] = useState(5 * 60 * 1000); // 5 minutes in ms
 
   // Sorting algorithm: 50% views, 50% recency
   const sortPhotos = (photoList) => {
@@ -47,12 +49,28 @@ export const PhotoProvider = ({ children }) => {
 
   const loadPhotos = async (forceRefresh = false) => {
     try {
+      // Check if we should use cached data
+      const now = Date.now();
+      const shouldUseCache = !forceRefresh && 
+        photos.length > 0 && 
+        (now - lastFetch) < cacheTimeout;
+
+      if (shouldUseCache) {
+        console.log('Using cached photo data');
+        return;
+      }
+
       setLoading(true);
       setError(null);
       
       // Load photo manifest from dynamic API
       const url = forceRefresh ? '/api/manifest?refresh=true' : '/api/manifest';
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'Cache-Control': forceRefresh ? 'no-cache' : 'max-age=300'
+        }
+      });
+      
       if (!response.ok) {
         throw new Error('Failed to load manifest');
       }
@@ -67,6 +85,7 @@ export const PhotoProvider = ({ children }) => {
       
       const sortedPhotos = sortPhotos(manifest.photos);
       setPhotos(sortedPhotos);
+      setLastFetch(now);
     } catch (err) {
       console.error('Error loading photos:', err);
       setError('Failed to load photos. Please try refreshing the page.');

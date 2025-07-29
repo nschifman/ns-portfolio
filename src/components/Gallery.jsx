@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { usePhotos } from '../contexts/PhotoContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 function Gallery() {
   const { category } = useParams();
@@ -8,12 +8,18 @@ function Gallery() {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [lightboxSize, setLightboxSize] = useState({ width: 0, height: 0 });
   const [heroPhotoIndex, setHeroPhotoIndex] = useState(0);
+  const [loadedImages, setLoadedImages] = useState(new Set());
 
   // Get current category name from URL
   const currentCategory = category || '';
   
   // Get photos for current category or all photos if no category
   const currentPhotos = currentCategory ? getPhotosByCategory(currentCategory) : getAllPhotos();
+
+  // Handle image load
+  const handleImageLoad = useCallback((photoId) => {
+    setLoadedImages(prev => new Set(prev).add(photoId));
+  }, []);
 
   // Handle photo click for lightbox
   const handlePhotoClick = (photo) => {
@@ -182,6 +188,9 @@ function Gallery() {
                     src={currentHeroPhoto.src}
                     alt={currentHeroPhoto.alt}
                     className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
                   />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/50 z-10"></div>
@@ -205,7 +214,7 @@ function Gallery() {
           </div>
         )}
         
-        {/* Photo Grid */}
+                {/* Photo Grid */}
         {currentPhotos.length > 0 ? (
           <div className="photo-grid">
             {currentPhotos.map((photo, index) => (
@@ -215,11 +224,15 @@ function Gallery() {
                 style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => handlePhotoClick(photo)}
               >
-                                            <img
+                <img
                   src={photo.src}
                   alt={photo.alt}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${
+                    loadedImages.has(photo.id) ? 'opacity-100' : 'opacity-0'
+                  }`}
                   loading="lazy"
+                  decoding="async"
+                  onLoad={() => handleImageLoad(photo.id)}
                   onContextMenu={(e) => e.preventDefault()}
                   onDragStart={(e) => e.preventDefault()}
                 />

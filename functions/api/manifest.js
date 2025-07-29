@@ -47,6 +47,7 @@ const findR2Images = async () => {
   try {
     const command = new ListObjectsV2Command({
       Bucket: R2_BUCKET_NAME,
+      MaxKeys: 1000, // Limit to reduce API costs
     });
 
     const response = await s3Client.send(command);
@@ -63,7 +64,8 @@ const findR2Images = async () => {
       .filter(key => {
         const ext = getFileExtension(key);
         return imageExtensions.includes(ext);
-      });
+      })
+      .slice(0, 500); // Limit to 500 images to reduce processing
 
     console.log(`📸 Found ${imageFiles.length} photos in R2 bucket`);
     return imageFiles;
@@ -92,7 +94,7 @@ export async function onRequest(context) {
       }), {
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': forceRefresh ? 'no-cache, no-store, must-revalidate' : 'public, max-age=5'
+          'Cache-Control': forceRefresh ? 'no-cache, no-store, must-revalidate' : 'public, max-age=300'
         }
       });
     }
@@ -139,7 +141,7 @@ export async function onRequest(context) {
     return new Response(JSON.stringify(manifest), {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': forceRefresh ? 'no-cache, no-store, must-revalidate' : 'public, max-age=5'
+        'Cache-Control': forceRefresh ? 'no-cache, no-store, must-revalidate' : 'public, max-age=300'
       }
     });
 
