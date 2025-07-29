@@ -27,7 +27,7 @@ const s3Client = new S3Client({
 const PHOTO_BASE_URL = '/photos';
 
 // Configuration - Update these for your Cloudflare R2 setup
-const R2_BUCKET_URL = process.env.R2_BUCKET_URL || `https://pub-${R2_ACCOUNT_ID}.r2.dev`;
+const R2_BUCKET_URL = process.env.R2_BUCKET_URL || `/api/photos`;
 const MANIFEST_PATH = path.join(__dirname, '../public/photos/manifest.json');
 
 // Supported image extensions

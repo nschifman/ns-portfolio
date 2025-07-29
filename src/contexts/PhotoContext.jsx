@@ -10,28 +10,6 @@ export const usePhotos = () => {
   return context;
 };
 
-// Fallback data in case manifest fails to load
-const fallbackPhotos = [
-  {
-    id: 'landscapes-sunset-mountain',
-    src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop',
-    alt: 'Sunset Mountain',
-    category: 'landscapes',
-    filename: 'sunset-mountain.jpg',
-    uploadedAt: new Date().toISOString(),
-    views: 85
-  },
-  {
-    id: 'portraits-model-shoot',
-    src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop',
-    alt: 'Model Shoot',
-    category: 'portraits',
-    filename: 'model-shoot.jpg',
-    uploadedAt: new Date().toISOString(),
-    views: 78
-  }
-];
-
 export const PhotoProvider = ({ children }) => {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -73,35 +51,26 @@ export const PhotoProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         
-        // Load photo manifest from Cloudflare R2
+        // Load photo manifest
         const response = await fetch('/photos/manifest.json');
         if (!response.ok) {
-          console.warn('Failed to load manifest, using fallback data');
-          const sortedPhotos = sortPhotos(fallbackPhotos);
-          setPhotos(sortedPhotos);
-          return;
+          throw new Error('Failed to load manifest');
         }
         
         const manifest = await response.json();
         
-        // Check if we have real photos or just fake data
-        const hasRealPhotos = manifest.photos && manifest.photos.length > 0;
-        
-        if (!hasRealPhotos) {
-          console.log('No real photos found in manifest');
+        if (!manifest.photos || manifest.photos.length === 0) {
           setError('No photos found. Please upload photos to R2 and regenerate manifest.');
           setPhotos([]);
           return;
         }
         
-        const sortedPhotos = sortPhotos(manifest.photos || fallbackPhotos);
+        const sortedPhotos = sortPhotos(manifest.photos);
         setPhotos(sortedPhotos);
       } catch (err) {
         console.error('Error loading photos:', err);
-        console.log('Using fallback data');
-        const sortedPhotos = sortPhotos(fallbackPhotos);
-        setPhotos(sortedPhotos);
-        setError(null); // Don't show error, use fallback instead
+        setError('Failed to load photos. Please try refreshing the page.');
+        setPhotos([]);
       } finally {
         setLoading(false);
       }

@@ -1,5 +1,5 @@
 {
-  "generated": "2025-07-28T23:59:16.094Z",
+  "generated": "2025-07-29T00:02:59.927Z",
   "totalPhotos": 17,
   "categories": [
     "astrophotography",
@@ -9,173 +9,173 @@
   "photos": [
     {
       "id": "astrophotography-DSCF1277",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/astrophotography/DSCF1277.jpg",
+      "src": "/api/photos/astrophotography/DSCF1277.jpg",
       "alt": "DSCF1277",
       "category": "astrophotography",
       "folder": "astrophotography",
       "filename": "DSCF1277.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 55
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 38
     },
     {
       "id": "astrophotography-untitled-30-3",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/astrophotography/untitled-30-3.jpg",
+      "src": "/api/photos/astrophotography/untitled-30-3.jpg",
       "alt": "Untitled 30 3",
       "category": "astrophotography",
       "folder": "astrophotography",
       "filename": "untitled-30-3.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 30
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 9
     },
     {
       "id": "hero-DSCF6701-Pano",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/hero/DSCF6701-Pano.jpg",
+      "src": "/api/photos/hero/DSCF6701-Pano.jpg",
       "alt": "DSCF6701 Pano",
       "category": "hero",
       "folder": "hero",
       "filename": "DSCF6701-Pano.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 88
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 44
     },
     {
       "id": "hero-DSCF7892",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/hero/DSCF7892.jpg",
+      "src": "/api/photos/hero/DSCF7892.jpg",
       "alt": "DSCF7892",
       "category": "hero",
       "folder": "hero",
       "filename": "DSCF7892.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 24
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 58
     },
     {
       "id": "street-DSCF1118",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/street/DSCF1118.jpg",
+      "src": "/api/photos/street/DSCF1118.jpg",
       "alt": "DSCF1118",
       "category": "street",
       "folder": "street",
       "filename": "DSCF1118.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 44
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 10
     },
     {
       "id": "street-DSCF5119",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/street/DSCF5119.jpg",
+      "src": "/api/photos/street/DSCF5119.jpg",
       "alt": "DSCF5119",
       "category": "street",
       "folder": "street",
       "filename": "DSCF5119.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 91
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 0
     },
     {
       "id": "street-DSCF5129",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/street/DSCF5129.jpg",
+      "src": "/api/photos/street/DSCF5129.jpg",
       "alt": "DSCF5129",
       "category": "street",
       "folder": "street",
       "filename": "DSCF5129.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 82
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 1
     },
     {
       "id": "street-DSCF5139",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/street/DSCF5139.jpg",
+      "src": "/api/photos/street/DSCF5139.jpg",
       "alt": "DSCF5139",
       "category": "street",
       "folder": "street",
       "filename": "DSCF5139.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 72
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 57
     },
     {
       "id": "street-PICT5356",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/street/PICT5356.jpg",
+      "src": "/api/photos/street/PICT5356.jpg",
       "alt": "PICT5356",
       "category": "street",
       "folder": "street",
       "filename": "PICT5356.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 53
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 30
     },
     {
       "id": "street-R1-00635-033A",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/street/R1-00635-033A.jpg",
+      "src": "/api/photos/street/R1-00635-033A.jpg",
       "alt": "R1 00635 033A",
       "category": "street",
       "folder": "street",
       "filename": "R1-00635-033A.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 40
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 1
     },
     {
       "id": "wildlife-untitled-0424",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/wildlife/untitled-0424.jpg",
+      "src": "/api/photos/wildlife/untitled-0424.jpg",
       "alt": "Untitled 0424",
       "category": "wildlife",
       "folder": "wildlife",
       "filename": "untitled-0424.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 75
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 61
     },
     {
       "id": "wildlife-untitled-0764",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/wildlife/untitled-0764.jpg",
+      "src": "/api/photos/wildlife/untitled-0764.jpg",
       "alt": "Untitled 0764",
       "category": "wildlife",
       "folder": "wildlife",
       "filename": "untitled-0764.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 35
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 10
     },
     {
       "id": "wildlife-untitled-0844",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/wildlife/untitled-0844.jpg",
+      "src": "/api/photos/wildlife/untitled-0844.jpg",
       "alt": "Untitled 0844",
       "category": "wildlife",
       "folder": "wildlife",
       "filename": "untitled-0844.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 42
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 97
     },
     {
       "id": "wildlife-untitled-0875",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/wildlife/untitled-0875.jpg",
+      "src": "/api/photos/wildlife/untitled-0875.jpg",
       "alt": "Untitled 0875",
       "category": "wildlife",
       "folder": "wildlife",
       "filename": "untitled-0875.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 90
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 53
     },
     {
       "id": "wildlife-untitled-8103",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/wildlife/untitled-8103.jpg",
+      "src": "/api/photos/wildlife/untitled-8103.jpg",
       "alt": "Untitled 8103",
       "category": "wildlife",
       "folder": "wildlife",
       "filename": "untitled-8103.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 53
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 60
     },
     {
       "id": "wildlife-untitled-8239",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/wildlife/untitled-8239.jpg",
+      "src": "/api/photos/wildlife/untitled-8239.jpg",
       "alt": "Untitled 8239",
       "category": "wildlife",
       "folder": "wildlife",
       "filename": "untitled-8239.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 25
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 4
     },
     {
       "id": "wildlife-untitled-8443",
-      "src": "https://pub-7afaf04ebcdccfd4fffc24938a03466d.r2.dev/wildlife/untitled-8443.jpg",
+      "src": "/api/photos/wildlife/untitled-8443.jpg",
       "alt": "Untitled 8443",
       "category": "wildlife",
       "folder": "wildlife",
       "filename": "untitled-8443.jpg",
-      "uploadedAt": "2025-07-28T23:59:16.093Z",
-      "views": 20
+      "uploadedAt": "2025-07-29T00:02:59.926Z",
+      "views": 58
     }
   ]
 }
