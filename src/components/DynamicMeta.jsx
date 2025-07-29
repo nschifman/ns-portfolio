@@ -54,8 +54,8 @@ const DynamicMeta = () => {
           const structuredData = {
             "@context": "https://schema.org",
             "@type": "Person",
-            "name": "nschify",
-            "alternateName": "Noah Schifman",
+            "name": "Noah Schifman",
+            "alternateName": "nschify",
             "jobTitle": "Professional Photographer",
             "url": "https://000279.xyz",
             "sameAs": [
