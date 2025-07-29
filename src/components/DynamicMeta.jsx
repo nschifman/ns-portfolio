@@ -57,7 +57,7 @@ const DynamicMeta = () => {
             "name": "Noah Schifman",
             "alternateName": "nschify",
             "jobTitle": "Professional Photographer",
-            "url": "https://000279.xyz",
+            "url": "https://noahschifman.com",
             "sameAs": [
               "https://instagram.com/nschify"
             ],
