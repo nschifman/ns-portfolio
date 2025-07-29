@@ -181,7 +181,8 @@ function Gallery() {
             </div>
 
             {/* Instagram Link - Right */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex items-center space-x-3">
+              <span className="text-gray-400/70 text-sm font-medium">Contact me:</span>
               <a
                 href="https://instagram.com/nschify"
                 target="_blank"
