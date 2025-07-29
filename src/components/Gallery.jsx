@@ -264,9 +264,41 @@ function Gallery() {
     </div>
   ), []);
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><div className="text-white">Loading...</div></div>;
-  if (error) return ErrorComponent;
-  if (photos.length === 0) return EmptyStateComponent;
+  // Debug logging
+  console.log('Gallery state:', { loading, error, photosLength: photos.length, currentCategory });
+  
+  // Temporary fallback for debugging
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center">
+        <div className="text-white text-xl mb-4">Loading photos...</div>
+        <div className="text-gray-400 text-sm">Please wait while we load your portfolio</div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center">
+        <div className="text-white text-xl mb-4">Error: {error}</div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+  
+  if (photos.length === 0) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center">
+        <div className="text-white text-xl mb-4">No photos found</div>
+        <div className="text-gray-400 text-sm">Add some photos to get started!</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black transition-colors duration-200 flex flex-col">
