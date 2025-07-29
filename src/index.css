@@ -252,11 +252,7 @@ img {
                 will-change: auto;
               }
 
-              /* Smooth category transitions */
-              .category-slide-enter {
-                opacity: 0;
-                transform: translateY(10px);
-              }
+
 
               /* Prevent layout shifts during transitions */
               main {

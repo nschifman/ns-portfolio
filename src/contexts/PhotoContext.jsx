@@ -114,7 +114,17 @@ export const PhotoProvider = ({ children }) => {
 
   useEffect(() => {
     loadPhotos();
-  }, [loadPhotos]);
+    
+    // Fallback: if loading takes too long, show error
+    const fallbackTimer = setTimeout(() => {
+      if (loading) {
+        setError('Loading timeout. Please refresh the page.');
+        setLoading(false);
+      }
+    }, 15000); // 15 second fallback
+    
+    return () => clearTimeout(fallbackTimer);
+  }, [loadPhotos, loading]);
 
   // Memoized categories computation
   const categories = useMemo(() => {

@@ -264,7 +264,7 @@ function Gallery() {
     </div>
   ), []);
 
-  if (loading) return <div className="min-h-screen bg-black"></div>;
+  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><div className="text-white">Loading...</div></div>;
   if (error) return ErrorComponent;
   if (photos.length === 0) return EmptyStateComponent;
 
