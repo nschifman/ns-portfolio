@@ -67,6 +67,9 @@
     /* Optimize for performance */
     will-change: auto;
     transform: translateZ(0);
+    /* Improve loading performance */
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px;
   }
 
   /* Mobile optimizations */
@@ -74,6 +77,7 @@
     .photo-item {
       margin-bottom: 0.5rem;
       border-radius: 0.5rem;
+      contain-intrinsic-size: 0 300px;
     }
   }
 
@@ -85,6 +89,9 @@
     aspect-ratio: auto;
     max-width: 100%;
     height: auto;
+    /* Optimize image rendering */
+    image-rendering: auto;
+    backface-visibility: hidden;
   }
 
   .photo-item picture {
@@ -208,11 +215,16 @@ img {
                 @apply shimmer;
               }
 
-              /* Performance optimizations */
+              /* Improved loading placeholder */
+              .photo-item.loading {
+                background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+                background-size: 200px 100%;
+                animation: shimmer 1.5s infinite;
+              }
+
+              /* Optimize image loading transitions */
               .photo-item img {
-                will-change: auto; /* Only change when needed */
-                backface-visibility: hidden;
-                transform: translateZ(0);
+                transition: opacity 0.3s ease-in-out;
               }
 
               /* Optimize hero images */

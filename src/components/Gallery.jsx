@@ -25,6 +25,19 @@ function Gallery() {
     return currentCategory ? getPhotosByCategory(currentCategory) : getAllPhotos();
   }, [currentCategory, getPhotosByCategory, getAllPhotos]);
 
+  // Preload first few images for better initial load experience
+  useEffect(() => {
+    if (currentPhotos.length > 0 && visibleImages.size === 0) {
+      const initialImages = new Set();
+      // Preload first 6 images immediately
+      const imagesToPreload = Math.min(6, currentPhotos.length);
+      for (let i = 0; i < imagesToPreload; i++) {
+        initialImages.add(currentPhotos[i].id);
+      }
+      setVisibleImages(initialImages);
+    }
+  }, [currentPhotos, visibleImages.size]);
+
   // Optimized Intersection Observer for scroll-based loading
   useEffect(() => {
     if (observerRef.current) {
@@ -42,6 +55,23 @@ function Gallery() {
             if (photoId && !newVisibleImages.has(photoId)) {
               newVisibleImages.add(photoId);
               hasChanges = true;
+              
+              // Preload nearby images for smoother scrolling
+              const currentIndex = currentPhotos.findIndex(p => p.id === photoId);
+              if (currentIndex !== -1) {
+                // Preload next 2 images
+                for (let i = 1; i <= 2; i++) {
+                  const nextPhoto = currentPhotos[currentIndex + i];
+                  if (nextPhoto && !newVisibleImages.has(nextPhoto.id)) {
+                    newVisibleImages.add(nextPhoto.id);
+                  }
+                }
+                // Preload previous 1 image
+                const prevPhoto = currentPhotos[currentIndex - 1];
+                if (prevPhoto && !newVisibleImages.has(prevPhoto.id)) {
+                  newVisibleImages.add(prevPhoto.id);
+                }
+              }
             }
           }
         });
@@ -58,7 +88,7 @@ function Gallery() {
         observerRef.current.disconnect();
       }
     };
-  }, [observerOptions, visibleImages]);
+  }, [observerOptions, visibleImages, currentPhotos]);
 
   // Handle image load with debouncing
   const handleImageLoad = useCallback((photoId) => {
@@ -325,11 +355,12 @@ function Gallery() {
                       <img
                         src={photo.previewSrc || photo.src}
                         alt={photo.alt}
-                        className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${
+                        className={`w-full h-full object-cover transition-opacity duration-300 group-hover:scale-105 ${
                           isLoaded ? 'opacity-100' : 'opacity-0'
                         }`}
                         loading="lazy"
                         decoding="async"
+                        fetchPriority="high"
                         onLoad={() => handleImageLoad(photo.id)}
                         onContextMenu={(e) => e.preventDefault()}
                         onDragStart={(e) => e.preventDefault()}
