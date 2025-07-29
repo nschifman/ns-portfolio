@@ -51,8 +51,6 @@ export const PhotoProvider = ({ children }) => {
 
   const loadPhotos = useCallback(async (forceRefresh = false) => {
     try {
-      console.log('PhotoContext: Starting to load photos');
-      
       // Check if we should use cached data
       const now = Date.now();
       const shouldUseCache = !forceRefresh && 
@@ -60,51 +58,21 @@ export const PhotoProvider = ({ children }) => {
         (now - lastFetch) < cacheTimeout;
 
       if (shouldUseCache) {
-        console.log('PhotoContext: Using cached data');
         return;
       }
 
-      console.log('PhotoContext: Setting loading to true');
       setLoading(true);
       setError(null);
       
-      // TEMPORARY: Use mock data for debugging
-      console.log('PhotoContext: Using mock data for debugging');
-      const mockPhotos = [
-        {
-          id: '1',
-          src: 'https://photos.noahschifman.com/hero/DSCF6701-Pano.jpg',
-          previewSrc: 'https://photos.noahschifman.com/hero/DSCF6701-Pano.jpg',
-          alt: 'Test Photo 1',
-          folder: 'hero',
-          uploadedAt: new Date().toISOString()
-        },
-        {
-          id: '2',
-          src: 'https://photos.noahschifman.com/landscape/DSCF6702.jpg',
-          previewSrc: 'https://photos.noahschifman.com/landscape/DSCF6702.jpg',
-          alt: 'Test Photo 2',
-          folder: 'landscape',
-          uploadedAt: new Date().toISOString()
-        }
-      ];
-      
-      const sortedPhotos = sortPhotos(mockPhotos);
-      console.log('PhotoContext: Loaded', sortedPhotos.length, 'mock photos');
-      setPhotos(sortedPhotos);
-      setLastFetch(now);
-      
-      // Comment out the actual API call for now
-      /*
       // Load photo manifest from dynamic API with optimized timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced to 8 seconds
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
       
       const url = forceRefresh ? '/api/manifest?refresh=true' : '/api/manifest';
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
-          'Cache-Control': forceRefresh ? 'no-cache' : 'max-age=600', // Increased cache time
+          'Cache-Control': forceRefresh ? 'no-cache' : 'max-age=600',
           'Accept': 'application/json',
           'Accept-Encoding': 'gzip, deflate, br'
         }
@@ -125,10 +93,8 @@ export const PhotoProvider = ({ children }) => {
       }
       
       const sortedPhotos = sortPhotos(manifest.photos);
-      console.log('PhotoContext: Loaded', sortedPhotos.length, 'photos');
       setPhotos(sortedPhotos);
       setLastFetch(now);
-      */
     } catch (err) {
       console.error('Error loading photos:', err);
       if (err.name === 'AbortError') {
@@ -138,7 +104,6 @@ export const PhotoProvider = ({ children }) => {
       }
       setPhotos([]);
     } finally {
-      console.log('PhotoContext: Setting loading to false');
       setLoading(false);
     }
   }, [photos.length, lastFetch, cacheTimeout, sortPhotos]);
@@ -149,14 +114,6 @@ export const PhotoProvider = ({ children }) => {
 
   useEffect(() => {
     loadPhotos();
-    
-    // Fallback: if loading takes too long, show error
-    const fallbackTimer = setTimeout(() => {
-      setError('Loading timeout. Please refresh the page.');
-      setLoading(false);
-    }, 15000); // 15 second fallback
-    
-    return () => clearTimeout(fallbackTimer);
   }, [loadPhotos]);
 
   // Memoized categories computation

@@ -10,11 +10,9 @@ function Gallery() {
   const [heroPhotoIndex, setHeroPhotoIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState(new Set());
   const [visibleImages, setVisibleImages] = useState(new Set());
-  const [preloadedFullSize, setPreloadedFullSize] = useState(new Set());
   const [isCategoryTransitioning, setIsCategoryTransitioning] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isSiteFullyLoaded, setIsSiteFullyLoaded] = useState(false);
   const observerRef = useRef(null);
   const observerOptions = useMemo(() => ({
     rootMargin: '100px 0px', // Increased for better performance
@@ -32,44 +30,6 @@ function Gallery() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Mark site as fully loaded after initial render
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsSiteFullyLoaded(true);
-    }, 1000); // Wait 1 second after initial load
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Background preloader for visible full-size images
-  useEffect(() => {
-    if (!isSiteFullyLoaded || currentPhotos.length === 0) return;
-
-    const preloadVisibleFullSize = async () => {
-      const visiblePhotoIds = Array.from(visibleImages);
-      const photosToPreload = currentPhotos.filter(photo => 
-        visiblePhotoIds.includes(photo.id) && !preloadedFullSize.has(photo.id)
-      );
-
-      // Preload full-size images for visible photos
-      for (const photo of photosToPreload) {
-        try {
-          const img = new Image();
-          img.src = photo.src;
-          await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-          });
-          setPreloadedFullSize(prev => new Set(prev).add(photo.id));
-        } catch (error) {
-          console.warn('Failed to preload full-size image:', photo.id);
-        }
-      }
-    };
-
-    preloadVisibleFullSize();
-  }, [isSiteFullyLoaded, visibleImages, currentPhotos, preloadedFullSize]);
 
   // Get current category name from URL
   const currentCategory = category || '';
@@ -264,41 +224,9 @@ function Gallery() {
     </div>
   ), []);
 
-  // Debug logging
-  console.log('Gallery state:', { loading, error, photosLength: photos.length, currentCategory });
-  
-  // Temporary fallback for debugging
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center">
-        <div className="text-white text-xl mb-4">Loading photos...</div>
-        <div className="text-gray-400 text-sm">Please wait while we load your portfolio</div>
-      </div>
-    );
-  }
-  
-  if (error) {
-    return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center">
-        <div className="text-white text-xl mb-4">Error: {error}</div>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
-          Try Again
-        </button>
-      </div>
-    );
-  }
-  
-  if (photos.length === 0) {
-    return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center">
-        <div className="text-white text-xl mb-4">No photos found</div>
-        <div className="text-gray-400 text-sm">Add some photos to get started!</div>
-      </div>
-    );
-  }
+  if (loading) return <div className="min-h-screen bg-black"></div>;
+  if (error) return ErrorComponent;
+  if (photos.length === 0) return EmptyStateComponent;
 
   return (
     <div className="min-h-screen bg-black transition-colors duration-200 flex flex-col">
