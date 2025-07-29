@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { PhotoProvider } from './contexts/PhotoContext';
+import DynamicMeta from './components/DynamicMeta';
 
 // Lazy load the Gallery component for better performance
 const Gallery = lazy(() => import('./components/Gallery'));
@@ -47,21 +48,22 @@ const SecurityWrapper = ({ children }) => {
   return <div className="select-none">{children}</div>;
 };
 
-function App() {
-  return (
-    <SecurityWrapper>
-      <PhotoProvider>
-        <Router>
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              <Route path="/" element={<Gallery />} />
-              <Route path="/:category" element={<Gallery />} />
-            </Routes>
-          </Suspense>
-        </Router>
-      </PhotoProvider>
-    </SecurityWrapper>
-  );
-}
+            function App() {
+              return (
+                <SecurityWrapper>
+                  <PhotoProvider>
+                    <Router>
+                      <DynamicMeta />
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <Routes>
+                          <Route path="/" element={<Gallery />} />
+                          <Route path="/:category" element={<Gallery />} />
+                        </Routes>
+                      </Suspense>
+                    </Router>
+                  </PhotoProvider>
+                </SecurityWrapper>
+              );
+            }
 
-export default App; 
+export default App; fa

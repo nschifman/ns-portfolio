@@ -178,12 +178,33 @@ img {
                 will-change: transform;
                 backface-visibility: hidden;
                 transform: translateZ(0);
+                image-rendering: -webkit-optimize-contrast;
+                image-rendering: crisp-edges;
               }
 
               /* Optimize hero images */
               .hero-fade {
                 will-change: opacity;
                 backface-visibility: hidden;
+              }
+
+              /* Production optimizations */
+              * {
+                box-sizing: border-box;
+              }
+
+              /* Reduce layout shifts */
+              .photo-item {
+                contain: layout style paint;
+              }
+
+              /* Optimize animations */
+              @media (prefers-reduced-motion: reduce) {
+                *, *::before, *::after {
+                  animation-duration: 0.01ms !important;
+                  animation-iteration-count: 1 !important;
+                  transition-duration: 0.01ms !important;
+                }
               }
 
               /* Custom scrollbar */

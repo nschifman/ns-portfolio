@@ -56,23 +56,28 @@ export const PhotoProvider = ({ children }) => {
         (now - lastFetch) < cacheTimeout;
 
       if (shouldUseCache) {
-        console.log('Using cached photo data');
         return;
       }
 
       setLoading(true);
       setError(null);
       
-      // Load photo manifest from dynamic API
+      // Load photo manifest from dynamic API with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const url = forceRefresh ? '/api/manifest?refresh=true' : '/api/manifest';
       const response = await fetch(url, {
+        signal: controller.signal,
         headers: {
           'Cache-Control': forceRefresh ? 'no-cache' : 'max-age=300'
         }
       });
       
+      clearTimeout(timeoutId);
+      
       if (!response.ok) {
-        throw new Error('Failed to load manifest');
+        throw new Error(`Failed to load manifest: ${response.status}`);
       }
       
       const manifest = await response.json();
@@ -88,7 +93,11 @@ export const PhotoProvider = ({ children }) => {
       setLastFetch(now);
     } catch (err) {
       console.error('Error loading photos:', err);
-      setError('Failed to load photos. Please try refreshing the page.');
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Please try again.');
+      } else {
+        setError('Failed to load photos. Please try refreshing the page.');
+      }
       setPhotos([]);
     } finally {
       setLoading(false);

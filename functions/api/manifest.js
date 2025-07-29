@@ -140,17 +140,30 @@ const generateAltText = (filename) => {
                   };
     });
 
-    // Extract unique categories, excluding 'hero'
-    const categories = [...new Set(photos.map(photo => photo.category))]
-      .filter(category => category !== 'hero' && category !== 'Hero')
-      .sort();
+                    // Extract unique categories, excluding 'hero'
+                const categories = [...new Set(photos.map(photo => photo.category))]
+                  .filter(category => category !== 'hero' && category !== 'Hero')
+                  .sort();
 
-    const manifest = {
-      generated: new Date().toISOString(),
-      totalPhotos: photos.length,
-      categories,
-      photos
-    };
+                // Generate dynamic meta information
+                const categoryList = categories.join(', ');
+                const metaInfo = {
+                  categories: categoryList,
+                  totalCategories: categories.length,
+                  totalPhotos: photos.length,
+                  categoryCounts: categories.map(cat => ({
+                    name: cat,
+                    count: photos.filter(p => p.category === cat).length
+                  }))
+                };
+
+                const manifest = {
+                  generated: new Date().toISOString(),
+                  totalPhotos: photos.length,
+                  categories,
+                  photos,
+                  meta: metaInfo
+                };
 
     console.log(`✅ Generated manifest with ${photos.length} photos and ${categories.length} categories`);
 
