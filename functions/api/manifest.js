@@ -1,11 +1,11 @@
 import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
 
-// R2 Configuration - Use environment variables in production
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || '7afaf04ebcdccfd4fffc24938a03466d';
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || 'a01231f57659a44c10591c815bb94fae';
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || '8097c355c39c04be371378ce732c4c352d39a63757de580ef5e6d7f441c63482';
-const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'ns-portfolio-photos';
-const CURRENT_DOMAIN = process.env.CURRENT_DOMAIN || '000279.xyz'; // Change to 'noahschifman.com' when ready
+            // R2 Configuration - Use environment variables in production
+            const R2_ACCOUNT_ID = context.env.R2_ACCOUNT_ID || '7afaf04ebcdccfd4fffc24938a03466d';
+            const R2_ACCESS_KEY_ID = context.env.R2_ACCESS_KEY_ID || 'a01231f57659a44c10591c815bb94fae';
+            const R2_SECRET_ACCESS_KEY = context.env.R2_SECRET_ACCESS_KEY || '8097c355c39c04be371378ce732c4c352d39a63757de580ef5e6d7f441c63482';
+            const R2_BUCKET_NAME = context.env.R2_BUCKET_NAME || 'ns-portfolio-photos';
+            const CURRENT_DOMAIN = context.env.CURRENT_DOMAIN || '000279.xyz'; // Change to 'noahschifman.com' when ready
 const R2_BUCKET_URL = `https://photos.${CURRENT_DOMAIN}`;
 
 // Initialize S3 client for R2
