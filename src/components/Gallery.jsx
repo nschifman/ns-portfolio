@@ -9,12 +9,41 @@ function Gallery() {
   const [lightboxSize, setLightboxSize] = useState({ width: 0, height: 0 });
   const [heroPhotoIndex, setHeroPhotoIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState(new Set());
+  const [visibleImages, setVisibleImages] = useState(new Set());
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const observerRef = useRef(null);
 
   // Get current category name from URL
   const currentCategory = category || '';
   
   // Get photos for current category or all photos if no category
   const currentPhotos = currentCategory ? getPhotosByCategory(currentCategory) : getAllPhotos();
+
+  // Intersection Observer for scroll-based loading
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const photoId = entry.target.dataset.photoId;
+            if (photoId) {
+              setVisibleImages(prev => new Set(prev).add(photoId));
+            }
+          }
+        });
+      },
+      {
+        rootMargin: '50px 0px',
+        threshold: 0.1
+      }
+    );
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
 
   // Handle image load
   const handleImageLoad = useCallback((photoId) => {
@@ -63,14 +92,18 @@ function Gallery() {
     return () => window.removeEventListener('resize', updateLightboxSize);
   }, []);
 
-  // Rotate hero photos every 20 seconds
+  // Rotate hero photos every 30 seconds with smooth transitions
   useEffect(() => {
     const heroPhotos = getPhotosByCategory('hero'); // Use photos from hero folder
     if (heroPhotos.length === 0) return;
 
     const interval = setInterval(() => {
-      setHeroPhotoIndex((prev) => (prev + 1) % heroPhotos.length);
-    }, 20000); // 20 seconds
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setHeroPhotoIndex((prev) => (prev + 1) % heroPhotos.length);
+        setIsTransitioning(false);
+      }, 500); // Half second fade transition
+    }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
   }, [getPhotosByCategory]);
@@ -127,7 +160,7 @@ function Gallery() {
 
             {/* Category Navigation - Center */}
             <div className="flex-1 flex justify-center items-center">
-              <div className="flex items-center space-x-4 overflow-x-auto">
+              <div className="flex items-center space-x-3 overflow-x-auto px-4">
                 <Link
                   to="/"
                   className={`nav-button whitespace-nowrap ${!currentCategory ? 'nav-button-active' : 'nav-button-inactive'}`}
@@ -151,7 +184,7 @@ function Gallery() {
             <div className="flex-shrink-0 flex items-center space-x-4">
               <button
                 onClick={refreshPhotos}
-                className="text-gray-400 hover:text-white transition-colors p-2"
+                className="text-gray-400/70 hover:text-white/90 transition-all duration-300 p-2 rounded-lg hover:bg-white/10"
                 title="Refresh photos"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,7 +195,7 @@ function Gallery() {
                 href="https://instagram.com/nschify"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400/70 hover:text-white/90 transition-all duration-300 p-2 rounded-lg hover:bg-white/10"
               >
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
@@ -174,7 +207,7 @@ function Gallery() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 flex-1">
+      <main className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 flex-1 page-transition">
         {/* Hero Section with Photo Backdrop */}
         {!currentCategory && (() => {
           const heroPhotos = getPhotosByCategory('hero'); // Use photos from hero folder
@@ -187,7 +220,9 @@ function Gallery() {
                   <img
                     src={currentHeroPhoto.src}
                     alt={currentHeroPhoto.alt}
-                    className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+                    className={`absolute inset-0 w-full h-full object-cover hero-fade ${
+                      isTransitioning ? 'opacity-50' : 'opacity-100'
+                    }`}
                     loading="eager"
                     decoding="async"
                     fetchPriority="high"
@@ -217,36 +252,48 @@ function Gallery() {
                 {/* Photo Grid */}
         {currentPhotos.length > 0 ? (
           <div className="photo-grid">
-            {currentPhotos.map((photo, index) => (
-              <div
-                key={photo.id}
-                className="photo-item group fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
-                onClick={() => handlePhotoClick(photo)}
-              >
-                <img
-                  src={photo.src}
-                  alt={photo.alt}
-                  className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${
-                    loadedImages.has(photo.id) ? 'opacity-100' : 'opacity-0'
-                  }`}
-                  loading="lazy"
-                  decoding="async"
-                  onLoad={() => handleImageLoad(photo.id)}
-                  onContextMenu={(e) => e.preventDefault()}
-                  onDragStart={(e) => e.preventDefault()}
-                />
+            {currentPhotos.map((photo, index) => {
+              const isVisible = visibleImages.has(photo.id);
+              const isLoaded = loadedImages.has(photo.id);
+              
+              return (
+                <div
+                  key={photo.id}
+                  className={`photo-item group fade-in-on-scroll ${isVisible ? 'visible' : ''}`}
+                  data-photo-id={photo.id}
+                  ref={(el) => {
+                    if (el && observerRef.current) {
+                      observerRef.current.observe(el);
+                    }
+                  }}
+                  onClick={() => handlePhotoClick(photo)}
+                >
+                  {isVisible && (
+                    <img
+                      src={photo.src}
+                      alt={photo.alt}
+                      className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+                        isLoaded ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      loading="lazy"
+                      decoding="async"
+                      onLoad={() => handleImageLoad(photo.id)}
+                      onContextMenu={(e) => e.preventDefault()}
+                      onDragStart={(e) => e.preventDefault()}
+                    />
+                  )}
                 
-                <div className="photo-overlay group-hover:bg-black/20">
-                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
-                    <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                    </svg>
+                                  <div className="photo-overlay group-hover:bg-black/20">
+                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
+                      <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              );
+            })}
+            </div>
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-600 dark:text-gray-400">No photos in this category yet.</p>

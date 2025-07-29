@@ -11,16 +11,50 @@
 
 @layer components {
   .photo-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4;
+    @apply grid gap-3 sm:gap-4;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  /* Responsive breakpoints for optimal viewing */
+  @media (min-width: 640px) {
+    .photo-grid {
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+  }
+
+  @media (min-width: 768px) {
+    .photo-grid {
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .photo-grid {
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    }
+  }
+
+  @media (min-width: 1440px) {
+    .photo-grid {
+      grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+    }
+  }
+
+  @media (min-width: 1920px) {
+    .photo-grid {
+      grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+    }
   }
 
   .photo-item {
-    @apply relative overflow-hidden rounded-lg cursor-pointer transition-all duration-300 hover:scale-[1.02];
-    aspect-ratio: 3/2;
+    @apply relative overflow-hidden rounded-lg cursor-pointer transition-all duration-500;
+    aspect-ratio: auto;
+    min-height: 200px;
+    max-height: 400px;
   }
 
   .photo-item img {
-    @apply w-full h-full object-cover transition-all duration-300;
+    @apply w-full h-full object-cover transition-all duration-500;
   }
 
   .photo-item img:not([src]) {
@@ -44,15 +78,34 @@
   }
 
   .nav-button {
-    @apply px-4 py-2 rounded-md text-sm font-medium transition-colors;
+    @apply px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 backdrop-blur-sm;
   }
 
   .nav-button-active {
-    @apply bg-blue-500 text-white;
+    @apply bg-blue-500/80 text-white shadow-lg shadow-blue-500/25;
   }
 
   .nav-button-inactive {
-    @apply bg-gray-700 text-gray-300 hover:bg-gray-600;
+    @apply bg-gray-700/60 text-gray-300 hover:bg-gray-600/70 hover:text-white shadow-md;
+  }
+
+  /* Smooth page transitions */
+  .page-transition {
+    @apply transition-all duration-500 ease-in-out;
+  }
+
+  /* Hero animation */
+  .hero-fade {
+    @apply transition-opacity duration-1000 ease-in-out;
+  }
+
+  /* Scroll animations */
+  .fade-in-on-scroll {
+    @apply opacity-0 translate-y-4 transition-all duration-700 ease-out;
+  }
+
+  .fade-in-on-scroll.visible {
+    @apply opacity-100 translate-y-0;
   }
 }
 
@@ -76,8 +129,24 @@ img {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
 .fade-in {
   animation: fadeIn 0.6s ease-out forwards;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Photo grid loading states */
+.photo-item:not(.visible) {
+  @apply shimmer;
 }
 
 /* Mobile optimizations */
