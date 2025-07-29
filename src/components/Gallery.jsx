@@ -239,6 +239,9 @@ function Gallery() {
             {/* Instagram Link - Right */}
             <div className="flex justify-end items-center space-x-3">
               <span className="text-gray-400/70 text-lg font-medium">Contact me!</span>
+              <svg className="h-4 w-4 text-gray-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
               <a
                 href="https://instagram.com/nschify"
                 target="_blank"
