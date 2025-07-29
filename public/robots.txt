@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://000279.xyz/sitemap.xml
+
+# Disallow API endpoints
+Disallow: /api/
+
+# Allow photos
+Allow: /photos/ 

@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { PhotoProvider } from './contexts/PhotoContext';
-import Gallery from './components/Gallery';
+
+// Lazy load the Gallery component for better performance
+const Gallery = lazy(() => import('./components/Gallery'));
+
+// Loading component
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center bg-black">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+      <p className="text-gray-400">Loading your portfolio...</p>
+    </div>
+  </div>
+);
 
 // Security wrapper to prevent right-click, drag, and keyboard shortcuts
 const SecurityWrapper = ({ children }) => {
@@ -20,11 +32,11 @@ const SecurityWrapper = ({ children }) => {
     
     // Prevent keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-      // Prevent Ctrl+S, Ctrl+U, F12, Ctrl+Shift+I, Ctrl+Shift+J
+      // Prevent Ctrl+S, Ctrl+U, F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
       if (
         (e.ctrlKey && (e.key === 's' || e.key === 'u')) ||
         e.key === 'F12' ||
-        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J'))
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C'))
       ) {
         preventDefault(e);
       }
@@ -45,10 +57,12 @@ function App() {
     <SecurityWrapper>
       <PhotoProvider>
         <Router>
-          <Routes>
-            <Route path="/" element={<Gallery />} />
-            <Route path="/:category" element={<Gallery />} />
-          </Routes>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              <Route path="/" element={<Gallery />} />
+              <Route path="/:category" element={<Gallery />} />
+            </Routes>
+          </Suspense>
         </Router>
       </PhotoProvider>
     </SecurityWrapper>

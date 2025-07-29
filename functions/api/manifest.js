@@ -1,11 +1,11 @@
 import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
 
-// R2 Configuration
-const R2_ACCOUNT_ID = '7afaf04ebcdccfd4fffc24938a03466d';
-const R2_ACCESS_KEY_ID = 'a01231f57659a44c10591c815bb94fae';
-const R2_SECRET_ACCESS_KEY = '8097c355c39c04be371378ce732c4c352d39a63757de580ef5e6d7f441c63482';
-const R2_BUCKET_NAME = 'ns-portfolio-photos';
-const CURRENT_DOMAIN = '000279.xyz'; // Change to 'noahschifman.com' when ready
+// R2 Configuration - Use environment variables in production
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || '7afaf04ebcdccfd4fffc24938a03466d';
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || 'a01231f57659a44c10591c815bb94fae';
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || '8097c355c39c04be371378ce732c4c352d39a63757de580ef5e6d7f441c63482';
+const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'ns-portfolio-photos';
+const CURRENT_DOMAIN = process.env.CURRENT_DOMAIN || '000279.xyz'; // Change to 'noahschifman.com' when ready
 const R2_BUCKET_URL = `https://photos.${CURRENT_DOMAIN}`;
 
 // Initialize S3 client for R2
@@ -77,7 +77,12 @@ const findR2Images = async () => {
 
 export async function onRequest(context) {
   try {
-    console.log('🔄 Generating manifest on-demand...');
+    // Basic rate limiting
+    const clientIP = context.request.headers.get('cf-connecting-ip') || 'unknown';
+    const userAgent = context.request.headers.get('user-agent') || 'unknown';
+    
+    // Log request for monitoring
+    console.log(`🔄 Manifest request from ${clientIP} - ${userAgent.substring(0, 50)}`);
     
     // Check if we should bypass cache
     const url = new URL(context.request.url);
@@ -141,7 +146,12 @@ export async function onRequest(context) {
     return new Response(JSON.stringify(manifest), {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': forceRefresh ? 'no-cache, no-store, must-revalidate' : 'public, max-age=300'
+        'Cache-Control': forceRefresh ? 'no-cache, no-store, must-revalidate' : 'public, max-age=300',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
       }
     });
 
