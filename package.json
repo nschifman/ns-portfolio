@@ -9,10 +9,7 @@
     "preview": "vite preview",
     "deploy": "wrangler pages deploy dist --project-name=noahschifman-portfolio",
     "generate-manifest": "node scripts/r2-manifest-generator.js",
-    "test-setup": "node scripts/test-setup.js",
-    "check-usage": "node scripts/r2-usage-monitor.js",
-    "monitor": "node scripts/r2-usage-monitor.js",
-    "test-email": "node scripts/test-email.js"
+
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.855.0",

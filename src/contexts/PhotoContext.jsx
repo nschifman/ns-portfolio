@@ -17,6 +17,9 @@ export const PhotoProvider = ({ children }) => {
   const [lastFetch, setLastFetch] = useState(0);
   const [cacheTimeout, setCacheTimeout] = useState(5 * 60 * 1000); // 5 minutes in ms
 
+
+
+
   // Memoized sorting algorithm: 50% views, 50% recency
   const sortPhotos = useCallback((photoList) => {
     if (!photoList || photoList.length === 0) return photoList;
@@ -72,9 +75,11 @@ export const PhotoProvider = ({ children }) => {
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
-          'Cache-Control': forceRefresh ? 'no-cache' : 'max-age=600',
+          'Cache-Control': forceRefresh ? 'no-cache' : 'max-age=300', // 5 minute cache
           'Accept': 'application/json',
-          'Accept-Encoding': 'gzip, deflate, br'
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'User-Agent': 'Mozilla/5.0 (compatible; Portfolio-App/1.0)'
         }
       });
       
@@ -99,6 +104,10 @@ export const PhotoProvider = ({ children }) => {
       console.error('Error loading photos:', err);
       if (err.name === 'AbortError') {
         setError('Request timed out. Please try again.');
+      } else if (err.message.includes('Failed to fetch')) {
+        setError('Network error. Please check your connection and try again.');
+      } else if (err.message.includes('404')) {
+        setError('Photos not found. Please check back later.');
       } else {
         setError('Failed to load photos. Please try refreshing the page.');
       }
@@ -111,6 +120,8 @@ export const PhotoProvider = ({ children }) => {
   const refreshPhotos = useCallback(() => {
     loadPhotos(true);
   }, [loadPhotos]);
+
+
 
   useEffect(() => {
     loadPhotos();
@@ -180,7 +191,7 @@ export const PhotoProvider = ({ children }) => {
     error,
     getPhotosByCategory,
     getAllPhotos,
-    refreshPhotos,
+    refreshPhotos
   }), [photos, categories, loading, error, getPhotosByCategory, getAllPhotos, refreshPhotos]);
 
   return (

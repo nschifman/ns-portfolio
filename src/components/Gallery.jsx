@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 function Gallery() {
   const { category } = useParams();
-  const { photos, categories, loading, error, getPhotosByCategory, getAllPhotos } = usePhotos();
+  const { photos, categories, loading, error, getPhotosByCategory, getAllPhotos, refreshPhotos } = usePhotos();
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [lightboxSize, setLightboxSize] = useState({ width: 0, height: 0 });
   const [heroPhotoIndex, setHeroPhotoIndex] = useState(0);
@@ -46,7 +46,7 @@ function Gallery() {
     setIsCategoryTransitioning(true);
     const timer = setTimeout(() => {
       setIsCategoryTransitioning(false);
-    }, 400); // Longer duration for smoother transition
+    }, 500); // Slower duration for smoother transition
     
     return () => clearTimeout(timer);
   }, [currentCategory]);
@@ -55,14 +55,25 @@ function Gallery() {
   useEffect(() => {
     if (currentPhotos.length > 0 && visibleImages.size === 0) {
       const initialImages = new Set();
-      // Preload first 6 images immediately
-      const imagesToPreload = Math.min(6, currentPhotos.length);
+      // Preload first 8 images immediately for better perceived performance
+      const imagesToPreload = Math.min(8, currentPhotos.length);
       for (let i = 0; i < imagesToPreload; i++) {
         initialImages.add(currentPhotos[i].id);
       }
       setVisibleImages(initialImages);
+      
+      // Preload hero images immediately for better performance
+      const heroPhotos = getPhotosByCategory('hero');
+      heroPhotos.forEach(photo => {
+        if (photo.src) {
+          const img = new Image();
+          img.src = photo.src;
+          img.loading = 'eager';
+          img.decoding = 'sync';
+        }
+      });
     }
-  }, [currentPhotos, visibleImages.size]);
+  }, [currentPhotos, visibleImages.size, getPhotosByCategory]);
 
   // Optimized Intersection Observer for scroll-based loading
   useEffect(() => {
@@ -136,16 +147,19 @@ function Gallery() {
     document.body.style.overflow = 'auto'; // Restore scroll
   }, []);
 
-  // Handle escape key
+  // Handle keyboard shortcuts
   useEffect(() => {
-    const handleEscape = (e) => {
+    const handleKeydown = (e) => {
+      // Escape key to close lightbox
       if (e.key === 'Escape' && selectedPhoto) {
         closeLightbox();
       }
+      
+
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', handleKeydown);
+    return () => document.removeEventListener('keydown', handleKeydown);
   }, [selectedPhoto, closeLightbox]);
 
   // Calculate lightbox size for responsive fit with debouncing
@@ -185,6 +199,39 @@ function Gallery() {
     return () => clearInterval(interval);
   }, [getPhotosByCategory]);
 
+  // Background full-size image preloader for visible photos
+  useEffect(() => {
+    if (visibleImages.size === 0 || currentPhotos.length === 0) return;
+
+    const preloadFullSizeImages = () => {
+      const imagesToPreload = [];
+      
+      // Get visible photos and preload their full-size versions
+      visibleImages.forEach(photoId => {
+        const photo = currentPhotos.find(p => p.id === photoId);
+        if (photo && photo.src) {
+          imagesToPreload.push(photo.src);
+        }
+      });
+
+      // Preload full-size images in background
+      imagesToPreload.forEach(src => {
+        const img = new Image();
+        img.src = src;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+      });
+    };
+
+    // Use requestIdleCallback for non-critical preloading
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(preloadFullSizeImages, { timeout: 2000 });
+    } else {
+      // Fallback for browsers without requestIdleCallback
+      setTimeout(preloadFullSizeImages, 1000);
+    }
+  }, [visibleImages, currentPhotos]);
+
   // Close mobile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -198,34 +245,72 @@ function Gallery() {
   }, [isMobileMenuOpen]);
 
 
-  // Memoized error component
+  // Memoized error component with better retry functionality
   const ErrorComponent = useMemo(() => (
     <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-white mb-4">Something went wrong</h1>
-        <p className="text-gray-400 mb-4">{error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
-          Try Again
-        </button>
+      <div className="text-center max-w-md mx-auto px-4">
+        <div className="mb-6">
+          <svg className="h-16 w-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <h1 className="text-2xl font-bold text-white mb-4">Something went wrong</h1>
+          <p className="text-gray-400 mb-6">{error}</p>
+        </div>
+        <div className="space-y-3">
+          <button 
+            onClick={() => window.location.reload()} 
+            className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+          >
+            Refresh Page
+          </button>
+          <button 
+            onClick={refreshPhotos} 
+            className="w-full px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     </div>
   ), [error]);
 
-  // Memoized empty state component
+  // Memoized empty state component with better messaging
   const EmptyStateComponent = useMemo(() => (
     <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-white mb-4">No photos found</h1>
-        <p className="text-gray-400">Add some photos to get started!</p>
+      <div className="text-center max-w-md mx-auto px-4">
+        <div className="mb-6">
+          <svg className="h-16 w-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <h1 className="text-2xl font-bold text-white mb-4">No photos found</h1>
+          <p className="text-gray-400 mb-6">It looks like there are no photos available at the moment. Please check back later or contact me if you think this is an error.</p>
+        </div>
+        <button 
+          onClick={refreshPhotos} 
+          className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+        >
+          Refresh
+        </button>
       </div>
     </div>
-  ), []);
+  ), [refreshPhotos]);
 
-  if (loading) return <div className="min-h-screen bg-black"></div>;
+  // Improved loading state with better visual feedback
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-gray-400 text-lg">Loading your photos...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Improved error state with retry functionality
   if (error) return ErrorComponent;
+  
+  // Improved empty state with better messaging
   if (photos.length === 0) return EmptyStateComponent;
 
   return (
@@ -426,84 +511,70 @@ function Gallery() {
         )}
         
         {/* Photo Grid */}
-        {currentPhotos.length > 0 ? (
-          <div className={`photo-grid transition-all duration-500 ease-in-out ${
-            isCategoryTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
-          }`}>
-            {currentPhotos.map((photo) => {
-              const isVisible = visibleImages.has(photo.id);
-              const isLoaded = loadedImages.has(photo.id);
+        <div className={`photo-grid transition-all duration-500 ease-in-out ${
+          isCategoryTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
+        }`}>
+          {currentPhotos.map((photo) => {
+            const isVisible = visibleImages.has(photo.id);
+            const isLoaded = loadedImages.has(photo.id);
+            
+            return (
+              <div
+                key={photo.id}
+                className={`photo-item group ${isVisible ? 'visible' : ''}`}
+                data-photo-id={photo.id}
+                ref={(el) => {
+                  if (el && observerRef.current) {
+                    observerRef.current.observe(el);
+                  }
+                }}
+                onClick={() => handlePhotoClick(photo)}
+              >
+                {isVisible && (
+                  <picture>
+                    {/* Mobile (up to 640px) */}
+                    <source
+                      media="(max-width: 640px)"
+                      srcSet={photo.mobilePreviewSrc || photo.previewSrc || photo.src}
+                    />
+                    {/* Tablet (641px to 1024px) */}
+                    <source
+                      media="(min-width: 641px) and (max-width: 1024px)"
+                      srcSet={photo.tabletPreviewSrc || photo.previewSrc || photo.src}
+                    />
+                    {/* Desktop (1025px and up) */}
+                    <source
+                      media="(min-width: 1025px)"
+                      srcSet={photo.desktopPreviewSrc || photo.previewSrc || photo.src}
+                    />
+                    {/* Fallback */}
+                    <img
+                      src={photo.previewSrc || photo.src}
+                      alt={photo.alt}
+                      className={`w-full h-full object-cover group-hover:scale-102 ${
+                        isLoaded ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      loading="lazy"
+                      decoding="async"
+                      fetchPriority="high"
+                      onLoad={() => handleImageLoad(photo.id)}
+                      onContextMenu={(e) => e.preventDefault()}
+                      onDragStart={(e) => e.preventDefault()}
+                    />
+                  </picture>
+                )}
               
-              return (
-                <div
-                  key={photo.id}
-                  className={`photo-item group ${isVisible ? 'visible' : ''}`}
-                  data-photo-id={photo.id}
-                  ref={(el) => {
-                    if (el && observerRef.current) {
-                      observerRef.current.observe(el);
-                    }
-                  }}
-                  onClick={() => handlePhotoClick(photo)}
-                >
-                  {isVisible && (
-                    <picture>
-                      {/* Mobile (up to 640px) */}
-                      <source
-                        media="(max-width: 640px)"
-                        srcSet={photo.mobilePreviewSrc || photo.previewSrc || photo.src}
-                      />
-                      {/* Tablet (641px to 1024px) */}
-                      <source
-                        media="(min-width: 641px) and (max-width: 1024px)"
-                        srcSet={photo.tabletPreviewSrc || photo.previewSrc || photo.src}
-                      />
-                      {/* Desktop (1025px and up) */}
-                      <source
-                        media="(min-width: 1025px)"
-                        srcSet={photo.desktopPreviewSrc || photo.previewSrc || photo.src}
-                      />
-                      {/* Fallback */}
-                      <img
-                        src={photo.previewSrc || photo.src}
-                        alt={photo.alt}
-                        className={`w-full h-full object-cover group-hover:scale-102 ${
-                          isLoaded ? 'opacity-100' : 'opacity-0'
-                        }`}
-                        loading="lazy"
-                        decoding="async"
-                        fetchPriority="high"
-                        onLoad={() => handleImageLoad(photo.id)}
-                        onContextMenu={(e) => e.preventDefault()}
-                        onDragStart={(e) => e.preventDefault()}
-                      />
-                    </picture>
-                  )}
-                
-                  <div className="photo-overlay group-hover:bg-black/20">
-                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
-                      <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                      </svg>
-                    </div>
+                <div className="photo-overlay group-hover:bg-black/20">
+                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
+                    <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                    </svg>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-400">No photos in this category yet.</p>
-            {categories.length > 0 && (
-              <Link 
-                to="/" 
-                className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline mt-2 inline-block"
-              >
-                View all photos
-              </Link>
-            )}
-          </div>
-        )}
+              </div>
+            );
+          })}
+        </div>
       </main>
 
       {/* Footer */}

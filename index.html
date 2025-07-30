@@ -44,6 +44,14 @@
     <link rel="preconnect" href="https://photos.noahschifman.com">
     
     <!-- Performance optimizations -->
+    <link rel="preload" href="/src/main.jsx" as="script" type="module">
+    <link rel="preload" href="/src/App.jsx" as="script" type="module">
+    
+    <!-- Resource hints for faster loading -->
+    <link rel="dns-prefetch" href="https://api.cloudflare.com">
+    <link rel="preconnect" href="https://api.cloudflare.com">
+    
+    <!-- Performance optimizations -->
     <meta name="format-detection" content="telephone=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">

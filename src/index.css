@@ -22,6 +22,7 @@
 @layer components {
   .scale-102 {
     transform: scale(1.01);
+    transition: transform 0.8s ease-out;
   }
   .photo-grid {
     @apply gap-2 sm:gap-3 lg:gap-4;
@@ -219,6 +220,19 @@ img {
                 box-sizing: border-box;
               }
 
+              /* Optimize scrolling performance */
+              html {
+                scroll-behavior: smooth;
+                scrollbar-width: thin;
+                scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+              }
+
+              /* Optimize body scrolling */
+              body {
+                overflow-y: scroll;
+                scrollbar-gutter: stable;
+              }
+
               /* Reduce layout shifts */
               .photo-item {
                 contain: layout style paint;
@@ -238,9 +252,37 @@ img {
                 contain: layout style;
                 will-change: transform, opacity;
                 min-height: 200px; /* Prevent layout jumping */
+                /* Optimize rendering performance */
+                transform: translateZ(0);
+                backface-visibility: hidden;
               }
 
               /* Optimize lightbox performance */
+              .lightbox {
+                contain: layout style paint;
+                will-change: opacity;
+                transform: translateZ(0);
+              }
+
+              /* Optimize image loading performance */
+              .photo-item img {
+                contain: layout style paint;
+                will-change: opacity, transform;
+                transform: translateZ(0);
+                backface-visibility: hidden;
+              }
+
+              /* Background preloader optimizations */
+              .preload-image {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+                width: 1px;
+                height: 1px;
+                opacity: 0;
+                pointer-events: none;
+                contain: layout style paint;
+              }
               .lightbox {
                 contain: layout style paint;
                 will-change: transform;
@@ -302,6 +344,19 @@ img {
               /* Smooth category transitions */
               .page-transition {
                 @apply transition-all duration-500 ease-in-out;
+              }
+
+              /* Category transition animations */
+              .category-slide-enter {
+                opacity: 0;
+                transform: translateY(4px);
+                transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+              }
+
+              /* Prevent layout shifts during transitions */
+              .photo-grid {
+                min-height: 200px;
+                transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
               }
 
 
