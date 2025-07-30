@@ -86,21 +86,7 @@ const findR2Images = async () => {
     
   } catch (error) {
     console.error('❌ Error scanning R2 bucket:', error.message);
-    console.log('💡 Using fallback mock data for testing...');
-    
-    // Fallback to mock data if R2 API fails
-    const mockR2Images = [
-      '/hero/hero-sunset.jpg',
-      '/hero/hero-mountain.jpg',
-      '/astrophotography/milky-way.jpg',
-      '/astrophotography/nebula.jpg',
-      '/street/city-lights.jpg',
-      '/street/urban-portrait.jpg',
-      '/wildlife/eagle-flight.jpg',
-      '/wildlife/lion-portrait.jpg'
-    ];
-    
-    return mockR2Images;
+    throw error;
   }
 };
 
