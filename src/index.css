@@ -13,8 +13,8 @@
   }
   
   img {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
+    image-rendering: auto;
+    image-rendering: -webkit-auto;
   }
 }
 
@@ -157,11 +157,21 @@
 
   .lightbox-image {
     @apply max-w-[calc(100vw-1rem)] max-h-[calc(100vh-1rem)] w-auto h-auto object-contain;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    image-rendering: high-quality;
-    -webkit-image-rendering: -webkit-optimize-contrast;
-    -webkit-image-rendering: crisp-edges;
+    image-rendering: auto !important;
+    image-rendering: -webkit-auto !important;
+    -webkit-image-rendering: auto !important;
+    -moz-image-rendering: auto !important;
+    -o-image-rendering: auto !important;
+    -ms-image-rendering: auto !important;
+    image-smoothing: auto !important;
+    -webkit-image-smoothing: auto !important;
+    -moz-image-smoothing: auto !important;
+    -o-image-smoothing: auto !important;
+    -ms-image-smoothing: auto !important;
+    /* Ensure smooth scaling */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
   }
 
   .nav-button {

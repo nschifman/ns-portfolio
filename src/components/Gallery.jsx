@@ -472,18 +472,28 @@ function Gallery() {
       {/* Lightbox */}
       {selectedPhoto && (
         <div className="lightbox" onClick={closeLightbox}>
-          <img
-            src={selectedPhoto.src}
-            alt={selectedPhoto.alt}
-            className="lightbox-image"
-            style={{
-              maxWidth: `${lightboxSize.width}px`,
-              maxHeight: `${lightboxSize.height}px`
-            }}
-            onClick={(e) => e.stopPropagation()}
-            onContextMenu={(e) => e.preventDefault()}
-            onDragStart={(e) => e.preventDefault()}
-          />
+          <picture>
+            {/* Use highest quality image for lightbox */}
+            <source
+              srcSet={selectedPhoto.src}
+              type="image/jpeg"
+            />
+            <img
+              src={selectedPhoto.src}
+              alt={selectedPhoto.alt}
+              className="lightbox-image"
+              style={{
+                maxWidth: `${lightboxSize.width}px`,
+                maxHeight: `${lightboxSize.height}px`
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              loading="eager"
+              decoding="sync"
+              fetchPriority="high"
+            />
+          </picture>
           <button
             onClick={closeLightbox}
             className="absolute top-4 right-4 text-white hover:text-gray-300"
