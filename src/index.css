@@ -146,11 +146,13 @@
     }
   }
 
-  /* Hero section - no animations */
+  /* Hero section - full window height */
   .hero-container {
     position: relative;
-    width: 100%;
+    width: 100vw;
     height: 100vh;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
     overflow: hidden;
   }
 
@@ -162,6 +164,15 @@
     height: 100%;
     object-fit: cover;
     object-position: center;
+  }
+
+  /* Smooth category transitions */
+  .photo-grid {
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  .category-title {
+    transition: opacity 0.2s ease-in-out;
   }
 }
 
