@@ -10,15 +10,9 @@ function Gallery() {
   const [heroPhotoIndex, setHeroPhotoIndex] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isHeroVisible, setIsHeroVisible] = useState(false);
   const observerRef = useRef(null);
-  const heroObserverRef = useRef(null);
   const observerOptions = useMemo(() => ({
-<<<<<<< HEAD
     rootMargin: '50px 0px',
-=======
-    rootMargin: '50px 0px', // Reduced for better performance
->>>>>>> origin/main
     threshold: 0.1
   }), []);
 
@@ -42,62 +36,7 @@ function Gallery() {
     return currentCategory ? getPhotosByCategory(currentCategory) : getAllPhotos();
   }, [currentCategory, getPhotosByCategory, getAllPhotos]);
 
-<<<<<<< HEAD
   // Simple Intersection Observer for lazy loading
-=======
-  // Handle category transitions smoothly
-  useEffect(() => {
-    setIsMobileMenuOpen(false); // Close mobile menu on category change
-    
-    // Start transition
-    setIsCategoryTransitioning(true);
-    
-    // After fade out, update content and fade in
-    const timer = setTimeout(() => {
-      setIsCategoryTransitioning(false);
-    }, 300); // Shorter duration for better UX
-    
-    return () => clearTimeout(timer);
-  }, [currentCategory]);
-
-  // Hero intersection observer - only load hero images when hero section is visible
-  useEffect(() => {
-    if (heroObserverRef.current) {
-      heroObserverRef.current.disconnect();
-    }
-
-    heroObserverRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsHeroVisible(true);
-            // Preload hero images when hero section becomes visible
-            const heroPhotos = getPhotosByCategory('hero');
-            heroPhotos.forEach(photo => {
-              if (photo.src) {
-                const img = new Image();
-                img.src = photo.src;
-                img.loading = 'eager';
-                img.decoding = 'sync';
-              }
-            });
-          } else {
-            setIsHeroVisible(false);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    return () => {
-      if (heroObserverRef.current) {
-        heroObserverRef.current.disconnect();
-      }
-    };
-  }, [getPhotosByCategory]);
-
-  // Optimized Intersection Observer for scroll-based loading
->>>>>>> origin/main
   useEffect(() => {
     if (observerRef.current) {
       observerRef.current.disconnect();
@@ -107,16 +46,9 @@ function Gallery() {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-<<<<<<< HEAD
             const img = entry.target.querySelector('img');
             if (img && !img.src) {
               img.src = img.dataset.src;
-=======
-            const photoId = entry.target.dataset.photoId;
-            if (photoId && !newVisibleImages.has(photoId)) {
-              newVisibleImages.add(photoId);
-              hasChanges = true;
->>>>>>> origin/main
             }
           }
         });
@@ -129,19 +61,7 @@ function Gallery() {
         observerRef.current.disconnect();
       }
     };
-<<<<<<< HEAD
   }, [observerOptions]);
-=======
-  }, [observerOptions, visibleImages]);
-
-  // Handle image load with proper state management
-  const handleImageLoad = useCallback((photoId) => {
-    setLoadedImages(prev => {
-      if (prev.has(photoId)) return prev;
-      return new Set(prev).add(photoId);
-    });
-  }, []);
->>>>>>> origin/main
 
   // Handle photo click for lightbox
   const handlePhotoClick = useCallback((photo) => {
@@ -209,11 +129,7 @@ function Gallery() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMobileMenuOpen]);
 
-<<<<<<< HEAD
   // Error component
-=======
-  // Memoized error component with better retry functionality
->>>>>>> origin/main
   const ErrorComponent = useMemo(() => (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="text-center max-w-md mx-auto px-4">
@@ -410,36 +326,16 @@ function Gallery() {
       </nav>
 
       {/* Main Content */}
-<<<<<<< HEAD
       <main className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 flex-1 min-h-[400px]">
         {/* Hero Section - Full Window Size */}
-=======
-      <main className={`max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 flex-1 min-h-[400px] ${
-        isCategoryTransitioning ? 'category-slide-enter' : ''
-      }`}>
-        {/* Hero Section with Photo Backdrop - Full Window Size */}
->>>>>>> origin/main
         {!currentCategory && (() => {
           const heroPhotos = getPhotosByCategory('hero');
           const currentHeroPhoto = heroPhotos[heroPhotoIndex];
           
           return (
-<<<<<<< HEAD
             <div className="hero-container -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12 2xl:-mx-16 mb-8 sm:mb-12">
               <div className="relative h-screen w-full overflow-hidden">
                 {currentHeroPhoto && (
-=======
-            <div 
-              className="hero-container -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12 2xl:-mx-16 mb-8 sm:mb-12"
-              ref={(el) => {
-                if (el && heroObserverRef.current) {
-                  heroObserverRef.current.observe(el);
-                }
-              }}
-            >
-              <div className="relative h-screen w-full overflow-hidden">
-                {currentHeroPhoto && isHeroVisible && (
->>>>>>> origin/main
                   <picture>
                     {/* Mobile (up to 640px) */}
                     <source
@@ -460,11 +356,7 @@ function Gallery() {
                     <img
                       src={currentHeroPhoto.previewSrc || currentHeroPhoto.src}
                       alt={currentHeroPhoto.alt}
-<<<<<<< HEAD
                       className="hero-image"
-=======
-                      className="hero-image hero-fade"
->>>>>>> origin/main
                       loading="eager"
                       decoding="async"
                       fetchPriority="high"
@@ -489,13 +381,7 @@ function Gallery() {
         
         {/* Category Title */}
         {currentCategory && (
-<<<<<<< HEAD
           <div className="mb-6">
-=======
-          <div className={`mb-6 transition-all duration-300 ease-in-out ${
-            isCategoryTransitioning ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'
-          }`}>
->>>>>>> origin/main
             <h2 className="text-2xl font-medium text-white mb-1">
               {currentCategory.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
             </h2>
@@ -506,7 +392,6 @@ function Gallery() {
         )}
         
         {/* Photo Grid */}
-<<<<<<< HEAD
         <div className="photo-grid">
           {currentPhotos.map((photo) => (
             <div
@@ -552,67 +437,6 @@ function Gallery() {
                   <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                   </svg>
-=======
-        <div className={`photo-grid photo-grid-optimized transition-all duration-300 ease-in-out ${
-          isCategoryTransitioning ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'
-        }`}>
-          {currentPhotos.map((photo) => {
-            const isVisible = visibleImages.has(photo.id);
-            const isLoaded = loadedImages.has(photo.id);
-            
-            return (
-              <div
-                key={photo.id}
-                className={`photo-item group ${isVisible ? 'visible' : ''}`}
-                data-photo-id={photo.id}
-                ref={(el) => {
-                  if (el && observerRef.current) {
-                    observerRef.current.observe(el);
-                  }
-                }}
-                onClick={() => handlePhotoClick(photo)}
-              >
-                {isVisible && (
-                  <picture>
-                    {/* Mobile (up to 640px) */}
-                    <source
-                      media="(max-width: 640px)"
-                      srcSet={photo.mobilePreviewSrc || photo.previewSrc || photo.src}
-                    />
-                    {/* Tablet (641px to 1024px) */}
-                    <source
-                      media="(min-width: 641px) and (max-width: 1024px)"
-                      srcSet={photo.tabletPreviewSrc || photo.previewSrc || photo.src}
-                    />
-                    {/* Desktop (1025px and up) */}
-                    <source
-                      media="(min-width: 1025px)"
-                      srcSet={photo.desktopPreviewSrc || photo.previewSrc || photo.src}
-                    />
-                    {/* Fallback */}
-                    <img
-                      src={photo.previewSrc || photo.src}
-                      alt={photo.alt}
-                      className={`w-full h-full object-cover group-hover:scale-102 transition-optimized ${
-                        isLoaded ? 'opacity-100' : 'opacity-0'
-                      }`}
-                      loading="lazy"
-                      decoding="async"
-                      fetchPriority="high"
-                      onLoad={() => handleImageLoad(photo.id)}
-                      onContextMenu={(e) => e.preventDefault()}
-                      onDragStart={(e) => e.preventDefault()}
-                    />
-                  </picture>
-                )}
-              
-                <div className="photo-overlay group-hover:bg-black/20">
-                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
-                    <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                    </svg>
-                  </div>
->>>>>>> origin/main
                 </div>
               </div>
             </div>
