@@ -13,9 +13,11 @@ function Gallery() {
   const [isCategoryTransitioning, setIsCategoryTransitioning] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isHeroVisible, setIsHeroVisible] = useState(false);
   const observerRef = useRef(null);
+  const heroObserverRef = useRef(null);
   const observerOptions = useMemo(() => ({
-    rootMargin: '100px 0px', // Increased for better performance
+    rootMargin: '50px 0px', // Reduced for better performance
     threshold: 0.1
   }), []);
 
@@ -54,29 +56,41 @@ function Gallery() {
     return () => clearTimeout(timer);
   }, [currentCategory]);
 
-  // Preload first few images for better initial load experience
+  // Hero intersection observer - only load hero images when hero section is visible
   useEffect(() => {
-    if (currentPhotos.length > 0 && visibleImages.size === 0) {
-      const initialImages = new Set();
-      // Preload first 8 images immediately for better perceived performance
-      const imagesToPreload = Math.min(8, currentPhotos.length);
-      for (let i = 0; i < imagesToPreload; i++) {
-        initialImages.add(currentPhotos[i].id);
-      }
-      setVisibleImages(initialImages);
-      
-      // Preload hero images immediately for better performance
-      const heroPhotos = getPhotosByCategory('hero');
-      heroPhotos.forEach(photo => {
-        if (photo.src) {
-          const img = new Image();
-          img.src = photo.src;
-          img.loading = 'eager';
-          img.decoding = 'sync';
-        }
-      });
+    if (heroObserverRef.current) {
+      heroObserverRef.current.disconnect();
     }
-  }, [currentPhotos, visibleImages.size, getPhotosByCategory]);
+
+    heroObserverRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsHeroVisible(true);
+            // Preload hero images when hero section becomes visible
+            const heroPhotos = getPhotosByCategory('hero');
+            heroPhotos.forEach(photo => {
+              if (photo.src) {
+                const img = new Image();
+                img.src = photo.src;
+                img.loading = 'eager';
+                img.decoding = 'sync';
+              }
+            });
+          } else {
+            setIsHeroVisible(false);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    return () => {
+      if (heroObserverRef.current) {
+        heroObserverRef.current.disconnect();
+      }
+    };
+  }, [getPhotosByCategory]);
 
   // Optimized Intersection Observer for scroll-based loading
   useEffect(() => {
@@ -95,23 +109,6 @@ function Gallery() {
             if (photoId && !newVisibleImages.has(photoId)) {
               newVisibleImages.add(photoId);
               hasChanges = true;
-              
-              // Preload nearby images for smoother scrolling
-              const currentIndex = currentPhotos.findIndex(p => p.id === photoId);
-              if (currentIndex !== -1) {
-                // Preload next 2 images
-                for (let i = 1; i <= 2; i++) {
-                  const nextPhoto = currentPhotos[currentIndex + i];
-                  if (nextPhoto && !newVisibleImages.has(nextPhoto.id)) {
-                    newVisibleImages.add(nextPhoto.id);
-                  }
-                }
-                // Preload previous 1 image
-                const prevPhoto = currentPhotos[currentIndex - 1];
-                if (prevPhoto && !newVisibleImages.has(prevPhoto.id)) {
-                  newVisibleImages.add(prevPhoto.id);
-                }
-              }
             }
           }
         });
@@ -128,9 +125,9 @@ function Gallery() {
         observerRef.current.disconnect();
       }
     };
-  }, [observerOptions, visibleImages, currentPhotos]);
+  }, [observerOptions, visibleImages]);
 
-  // Handle image load with debouncing
+  // Handle image load with proper state management
   const handleImageLoad = useCallback((photoId) => {
     setLoadedImages(prev => {
       if (prev.has(photoId)) return prev;
@@ -157,8 +154,6 @@ function Gallery() {
       if (e.key === 'Escape' && selectedPhoto) {
         closeLightbox();
       }
-      
-
     };
 
     document.addEventListener('keydown', handleKeydown);
@@ -202,39 +197,6 @@ function Gallery() {
     return () => clearInterval(interval);
   }, [getPhotosByCategory]);
 
-  // Background full-size image preloader for visible photos
-  useEffect(() => {
-    if (visibleImages.size === 0 || currentPhotos.length === 0) return;
-
-    const preloadFullSizeImages = () => {
-      const imagesToPreload = [];
-      
-      // Get visible photos and preload their full-size versions
-      visibleImages.forEach(photoId => {
-        const photo = currentPhotos.find(p => p.id === photoId);
-        if (photo && photo.src) {
-          imagesToPreload.push(photo.src);
-        }
-      });
-
-      // Preload full-size images in background
-      imagesToPreload.forEach(src => {
-        const img = new Image();
-        img.src = src;
-        img.loading = 'lazy';
-        img.decoding = 'async';
-      });
-    };
-
-    // Use requestIdleCallback for non-critical preloading
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(preloadFullSizeImages, { timeout: 2000 });
-    } else {
-      // Fallback for browsers without requestIdleCallback
-      setTimeout(preloadFullSizeImages, 1000);
-    }
-  }, [visibleImages, currentPhotos]);
-
   // Close mobile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -246,7 +208,6 @@ function Gallery() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMobileMenuOpen]);
-
 
   // Memoized error component with better retry functionality
   const ErrorComponent = useMemo(() => (
@@ -454,15 +415,22 @@ function Gallery() {
       <main className={`max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 flex-1 min-h-[400px] ${
         isCategoryTransitioning ? 'category-slide-enter' : ''
       }`}>
-        {/* Hero Section with Photo Backdrop */}
+        {/* Hero Section with Photo Backdrop - Full Window Size */}
         {!currentCategory && (() => {
           const heroPhotos = getPhotosByCategory('hero');
           const currentHeroPhoto = heroPhotos[heroPhotoIndex];
           
           return (
-            <div className="relative -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12 2xl:-mx-16 mb-8 sm:mb-12">
-              <div className="relative h-80 sm:h-96 lg:h-[28rem] xl:h-[32rem] overflow-hidden">
-                {currentHeroPhoto && (
+            <div 
+              className="relative -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12 2xl:-mx-16 mb-8 sm:mb-12"
+              ref={(el) => {
+                if (el && heroObserverRef.current) {
+                  heroObserverRef.current.observe(el);
+                }
+              }}
+            >
+              <div className="relative h-screen overflow-hidden">
+                {currentHeroPhoto && isHeroVisible && (
                   <picture>
                     {/* Mobile (up to 640px) */}
                     <source
@@ -483,7 +451,7 @@ function Gallery() {
                     <img
                       src={currentHeroPhoto.previewSrc || currentHeroPhoto.src}
                       alt={currentHeroPhoto.alt}
-                                          className="absolute inset-0 w-full h-full object-cover hero-fade"
+                      className="absolute inset-0 w-full h-full object-cover hero-fade"
                       loading="eager"
                       decoding="async"
                       fetchPriority="high"
@@ -554,7 +522,7 @@ function Gallery() {
                     <img
                       src={photo.previewSrc || photo.src}
                       alt={photo.alt}
-                      className={`w-full h-full object-cover group-hover:scale-102 transition-all duration-500 ease-in-out ${
+                      className={`w-full h-full object-cover group-hover:scale-102 transition-opacity duration-500 ease-in-out ${
                         isLoaded ? 'opacity-100' : 'opacity-0'
                       }`}
                       loading="lazy"
