@@ -196,7 +196,7 @@ function Gallery() {
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* Navigation */}
-      <nav className="sticky top-0 z-40 bg-black/95 backdrop-blur-sm border-b border-gray-800">
+      <nav className="sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-gray-800">
         <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="grid grid-cols-3 items-center h-20">
             {/* Home Button - Left */}
@@ -232,32 +232,32 @@ function Gallery() {
                     </button>
                   </div>
                   
+                  {/* Mobile dropdown overlay and menu */}
                   {isMobileMenuOpen && (
-                    <div 
-                      className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    />
-                  )}
-                  
-                  {isMobileMenuOpen && (
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 w-56 bg-gray-900/98 backdrop-blur-md border border-gray-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
-                      <div className="py-2">
-                        {categories.map((cat) => (
-                          <Link
-                            key={cat}
-                            to={`/${cat}`}
-                            className={`block px-4 py-3 text-sm font-medium ${
-                              currentCategory === cat 
-                                ? 'bg-blue-500/90 text-white shadow-lg' 
-                                : 'text-gray-300 hover:bg-gray-800/80 hover:text-white'
-                            }`}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            {cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                          </Link>
-                        ))}
+                    <>
+                      <div 
+                        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      />
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 w-56 bg-gray-900/98 backdrop-blur-md border border-gray-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <div className="py-2">
+                          {categories.map((cat) => (
+                            <Link
+                              key={cat}
+                              to={`/${cat}`}
+                              className={`block px-4 py-3 text-sm font-medium ${
+                                currentCategory === cat 
+                                  ? 'bg-blue-500/90 text-white shadow-lg' 
+                                  : 'text-gray-300 hover:bg-gray-800/80 hover:text-white'
+                              }`}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              {cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    </>
                   )}
                 </div>
               ) : (

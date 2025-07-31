@@ -17,9 +17,6 @@ export const PhotoProvider = ({ children }) => {
   const [lastFetch, setLastFetch] = useState(0);
   const cacheTimeout = 5 * 60 * 1000; // 5 minutes in ms
 
-
-
-
   // Memoized sorting algorithm: prioritize recency (most recently added last - at bottom)
   const sortPhotos = useCallback((photoList) => {
     if (!photoList || photoList.length === 0) return photoList;
@@ -50,7 +47,7 @@ export const PhotoProvider = ({ children }) => {
       
       // Load photo manifest from dynamic API with optimized timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased timeout for mobile
       
       const url = forceRefresh ? '/api/manifest?refresh=true' : '/api/manifest';
       const response = await fetch(url, {
@@ -60,14 +57,17 @@ export const PhotoProvider = ({ children }) => {
           'Accept': 'application/json',
           'Accept-Encoding': 'gzip, deflate, br',
           'Accept-Language': 'en-US,en;q=0.9',
-          'User-Agent': 'Mozilla/5.0 (compatible; Portfolio-App/1.0)'
-        }
+          'User-Agent': 'Mozilla/5.0 (compatible; Portfolio-App/1.0)',
+          'Connection': 'keep-alive'
+        },
+        mode: 'cors',
+        credentials: 'same-origin'
       });
       
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        throw new Error(`Failed to load manifest: ${response.status}`);
+        throw new Error(`Failed to load manifest: ${response.status} ${response.statusText}`);
       }
       
       const manifest = await response.json();
@@ -78,17 +78,30 @@ export const PhotoProvider = ({ children }) => {
         return;
       }
       
-      const sortedPhotos = sortPhotos(manifest.photos);
+      // Process photos for better mobile performance
+      const processedPhotos = manifest.photos.map(photo => ({
+        ...photo,
+        // Ensure we have fallback image sources for mobile
+        mobilePreviewSrc: photo.mobilePreviewSrc || photo.previewSrc || photo.src,
+        tabletPreviewSrc: photo.tabletPreviewSrc || photo.previewSrc || photo.src,
+        desktopPreviewSrc: photo.desktopPreviewSrc || photo.previewSrc || photo.src,
+        // Add loading priority for hero images
+        loadingPriority: photo.folder === 'hero' ? 'high' : 'low'
+      }));
+      
+      const sortedPhotos = sortPhotos(processedPhotos);
       setPhotos(sortedPhotos);
       setLastFetch(now);
     } catch (err) {
       console.error('Error loading photos:', err);
       if (err.name === 'AbortError') {
-        setError('Request timed out. Please try again.');
-      } else if (err.message.includes('Failed to fetch')) {
+        setError('Request timed out. Please check your connection and try again.');
+      } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
         setError('Network error. Please check your connection and try again.');
       } else if (err.message.includes('404')) {
         setError('Photos not found. Please check back later.');
+      } else if (err.message.includes('500')) {
+        setError('Server error. Please try again in a few moments.');
       } else {
         setError('Failed to load photos. Please try refreshing the page.');
       }
@@ -101,8 +114,6 @@ export const PhotoProvider = ({ children }) => {
   const refreshPhotos = useCallback(() => {
     loadPhotos(true);
   }, [loadPhotos]);
-
-
 
   useEffect(() => {
     loadPhotos();
