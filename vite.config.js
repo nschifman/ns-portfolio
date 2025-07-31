@@ -15,8 +15,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          utils: ['@aws-sdk/client-s3']
+          router: ['react-router-dom']
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
@@ -24,13 +23,7 @@ export default defineConfig({
       }
     },
     target: 'es2015',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      }
-    },
+    minify: 'esbuild',
     chunkSizeWarningLimit: 1000
   },
   resolve: {
