@@ -46,8 +46,11 @@
     columns: 2;
     column-gap: 0.75rem;
     column-fill: balance;
+<<<<<<< HEAD
     overflow-x: hidden; /* Prevent horizontal scroll */
     max-width: 100%;
+=======
+>>>>>>> origin/main
   }
 
   /* Responsive breakpoints for optimal viewing */
@@ -97,8 +100,11 @@
     display: block;
     width: 100%;
     page-break-inside: avoid;
+<<<<<<< HEAD
     contain: layout style paint; /* Performance optimization */
     will-change: opacity; /* Optimize for fade-in */
+=======
+>>>>>>> origin/main
   }
 
   /* Mobile optimizations */
@@ -136,11 +142,18 @@
     @apply w-full h-full object-cover;
   }
 
+<<<<<<< HEAD
   /* Photo fade-in animation - improved for performance */
   .photo-fade-in {
     opacity: 0;
     transition: opacity 1s ease-out;
     will-change: opacity;
+=======
+  /* Photo fade-in animation - simplified for performance */
+  .photo-fade-in {
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
+>>>>>>> origin/main
   }
 
   .photo-fade-in.photo-loaded {

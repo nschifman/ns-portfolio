@@ -13,8 +13,13 @@ function Gallery() {
   const observerRef = useRef(null);
   const loadedPhotosRef = useRef(new Set());
   const observerOptions = useMemo(() => ({
+<<<<<<< HEAD
     rootMargin: '300px 0px', // Increased for better preloading
     threshold: 0.01 // Lower threshold for earlier detection
+=======
+    rootMargin: '200px 0px',
+    threshold: 0.1
+>>>>>>> origin/main
   }), []);
 
   // Check if mobile and if categories need dropdown
@@ -64,6 +69,7 @@ function Gallery() {
   // Handle photo load completion
   const handlePhotoLoad = useCallback((photoId) => {
     loadedPhotosRef.current.add(photoId);
+<<<<<<< HEAD
     // Force re-render only for this specific photo with better performance
     requestAnimationFrame(() => {
       const photoElement = document.querySelector(`[data-photo-id="${photoId}"] img`);
@@ -71,6 +77,13 @@ function Gallery() {
         photoElement.classList.add('photo-loaded');
       }
     });
+=======
+    // Force re-render only for this specific photo
+    const photoElement = document.querySelector(`[data-photo-id="${photoId}"] img`);
+    if (photoElement) {
+      photoElement.classList.add('photo-loaded');
+    }
+>>>>>>> origin/main
   }, []);
 
   // Handle photo click for lightbox
