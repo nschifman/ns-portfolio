@@ -45,29 +45,29 @@ const SecurityWrapper = ({ children }) => {
   return <div className="select-none">{children}</div>;
 };
 
-            function App() {
-              return (
-                <SecurityWrapper>
-                  <PhotoProvider>
-                    <Router>
-                      <DynamicMeta />
-                      <Suspense fallback={
-                        <div className="min-h-screen bg-black flex items-center justify-center">
-                          <div className="text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-                            <p className="text-gray-400 text-lg">Loading...</p>
-                          </div>
-                        </div>
-                      }>
-                        <Routes>
-                          <Route path="/" element={<Gallery />} />
-                          <Route path="/:category" element={<Gallery />} />
-                        </Routes>
-                      </Suspense>
-                    </Router>
-                  </PhotoProvider>
-                </SecurityWrapper>
-              );
-            }
+function App() {
+  return (
+    <SecurityWrapper>
+      <PhotoProvider>
+        <Router>
+          <DynamicMeta />
+          <Suspense fallback={
+            <div className="min-h-screen bg-black flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                <p className="text-gray-400 text-lg">Loading...</p>
+              </div>
+            </div>
+          }>
+            <Routes>
+              <Route path="/" element={<Gallery />} />
+              <Route path="/:category" element={<Gallery />} />
+            </Routes>
+          </Suspense>
+        </Router>
+      </PhotoProvider>
+    </SecurityWrapper>
+  );
+}
 
 export default App;
