@@ -20,35 +20,16 @@ export const PhotoProvider = ({ children }) => {
 
 
 
-  // Memoized sorting algorithm: 50% views, 50% recency
+  // Memoized sorting algorithm: prioritize recency (most recently added first)
   const sortPhotos = useCallback((photoList) => {
     if (!photoList || photoList.length === 0) return photoList;
     
     return photoList.sort((a, b) => {
-      const now = new Date();
-      const aAge = (now - new Date(a.uploadedAt || a.createdAt || now)) / (1000 * 60 * 60 * 24); // days
-      const bAge = (now - new Date(b.uploadedAt || b.createdAt || now)) / (1000 * 60 * 60 * 24);
+      // Sort by upload/creation date - most recent first
+      const aDate = new Date(a.uploadedAt || a.createdAt || 0);
+      const bDate = new Date(b.uploadedAt || b.createdAt || 0);
       
-      const aViews = a.views || 0;
-      const bViews = b.views || 0;
-      
-      // Normalize scores (0-1)
-      const maxViews = Math.max(...photoList.map(p => p.views || 0), 1);
-      const maxAge = Math.max(...photoList.map(p => {
-        const age = (now - new Date(p.uploadedAt || p.createdAt || now)) / (1000 * 60 * 60 * 24);
-        return age;
-      }), 1);
-      
-      const aViewScore = aViews / maxViews;
-      const bViewScore = bViews / maxViews;
-      const aRecencyScore = 1 - (aAge / maxAge);
-      const bRecencyScore = 1 - (bAge / maxAge);
-      
-      // 50% views, 50% recency
-      const aScore = (aViewScore * 0.5) + (aRecencyScore * 0.5);
-      const bScore = (bViewScore * 0.5) + (bRecencyScore * 0.5);
-      
-      return bScore - aScore; // Higher score first
+      return bDate - aDate; // Most recent first
     });
   }, []);
 

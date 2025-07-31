@@ -42,11 +42,14 @@ function Gallery() {
   // Handle category transitions smoothly
   useEffect(() => {
     setIsMobileMenuOpen(false); // Close mobile menu on category change
-    // Only fade out the old content, don't fade in the new content
+    
+    // Start transition
     setIsCategoryTransitioning(true);
+    
+    // After fade out, update content and fade in
     const timer = setTimeout(() => {
       setIsCategoryTransitioning(false);
-    }, 500); // Slower duration for smoother transition
+    }, 300); // Shorter duration for better UX
     
     return () => clearTimeout(timer);
   }, [currentCategory]);
@@ -498,7 +501,7 @@ function Gallery() {
         
         {/* Category Title */}
         {currentCategory && (
-          <div className={`mb-6 transition-all duration-500 ease-in-out ${
+          <div className={`mb-6 transition-all duration-300 ease-in-out ${
             isCategoryTransitioning ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'
           }`}>
             <h2 className="text-2xl font-medium text-white mb-1">
@@ -511,8 +514,8 @@ function Gallery() {
         )}
         
         {/* Photo Grid */}
-        <div className={`photo-grid transition-all duration-500 ease-in-out ${
-          isCategoryTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
+        <div className={`photo-grid transition-all duration-300 ease-in-out ${
+          isCategoryTransitioning ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'
         }`}>
           {currentPhotos.map((photo) => {
             const isVisible = visibleImages.has(photo.id);
@@ -551,7 +554,7 @@ function Gallery() {
                     <img
                       src={photo.previewSrc || photo.src}
                       alt={photo.alt}
-                      className={`w-full h-full object-cover group-hover:scale-102 ${
+                      className={`w-full h-full object-cover group-hover:scale-102 transition-all duration-500 ease-in-out ${
                         isLoaded ? 'opacity-100' : 'opacity-0'
                       }`}
                       loading="lazy"
