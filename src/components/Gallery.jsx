@@ -422,14 +422,14 @@ function Gallery() {
           
           return (
             <div 
-              className="relative -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12 2xl:-mx-16 mb-8 sm:mb-12"
+              className="hero-container -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12 2xl:-mx-16 mb-8 sm:mb-12"
               ref={(el) => {
                 if (el && heroObserverRef.current) {
                   heroObserverRef.current.observe(el);
                 }
               }}
             >
-              <div className="relative h-screen overflow-hidden">
+              <div className="relative h-screen w-full overflow-hidden">
                 {currentHeroPhoto && isHeroVisible && (
                   <picture>
                     {/* Mobile (up to 640px) */}
@@ -451,7 +451,7 @@ function Gallery() {
                     <img
                       src={currentHeroPhoto.previewSrc || currentHeroPhoto.src}
                       alt={currentHeroPhoto.alt}
-                      className="absolute inset-0 w-full h-full object-cover hero-fade"
+                      className="hero-image hero-fade"
                       loading="eager"
                       decoding="async"
                       fetchPriority="high"
@@ -460,7 +460,14 @@ function Gallery() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/50 z-10"></div>
                 <div className="relative z-20 flex items-center justify-center h-full px-4">
-                  <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white/90 tracking-wide">Noah Schifman</h1>
+                  <div className="text-center">
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white/90 tracking-wide mb-4">
+                      Noah Schifman
+                    </h1>
+                    <p className="text-lg sm:text-xl lg:text-2xl text-white/80 font-light">
+                      Photography
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -482,7 +489,7 @@ function Gallery() {
         )}
         
         {/* Photo Grid */}
-        <div className={`photo-grid transition-all duration-300 ease-in-out ${
+        <div className={`photo-grid photo-grid-optimized transition-all duration-300 ease-in-out ${
           isCategoryTransitioning ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'
         }`}>
           {currentPhotos.map((photo) => {
@@ -522,7 +529,7 @@ function Gallery() {
                     <img
                       src={photo.previewSrc || photo.src}
                       alt={photo.alt}
-                      className={`w-full h-full object-cover group-hover:scale-102 transition-opacity duration-500 ease-in-out ${
+                      className={`w-full h-full object-cover group-hover:scale-102 transition-optimized ${
                         isLoaded ? 'opacity-100' : 'opacity-0'
                       }`}
                       loading="lazy"
