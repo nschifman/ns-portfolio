@@ -9,53 +9,68 @@
     text-rendering: optimizeSpeed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden; /* Prevent horizontal scroll */
+    overflow-x: hidden;
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
   }
   
   img {
     image-rendering: auto;
     image-rendering: -webkit-auto;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    pointer-events: auto;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    -webkit-overflow-scrolling: touch;
+    overflow-y: scroll;
+  }
+
+  * {
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.1);
   }
 }
 
 @layer components {
-  /* Prevent horizontal scroll on main content */
-  main {
+  /* Layout containers */
+  main, nav, .min-h-screen {
     overflow-x: hidden;
     max-width: 100vw;
     width: 100%;
   }
 
-  /* Prevent horizontal scroll on navigation */
-  nav {
-    overflow-x: hidden;
-    max-width: 100vw;
-    width: 100%;
-  }
-
-  /* Ensure the main container doesn't overflow */
-  .min-h-screen {
-    overflow-x: hidden;
-    max-width: 100vw;
-    width: 100%;
-  }
-
-  /* Ensure photo grid doesn't overflow */
+  /* Photo grid - masonry layout */
   .photo-grid {
     @apply gap-2 sm:gap-3 lg:gap-4;
     columns: 2;
     column-gap: 0.75rem;
     column-fill: balance;
-    overflow-x: hidden; /* Prevent horizontal scroll */
+    overflow-x: hidden;
     max-width: 100%;
+    transition: opacity 0.2s ease-in-out;
   }
 
-  /* Responsive breakpoints for optimal viewing */
+  /* Responsive photo grid breakpoints */
   @media (max-width: 640px) {
     .photo-grid {
       columns: 1;
       column-gap: 0.5rem;
       gap: 0.5rem;
+      @apply grid-cols-1 gap-3;
     }
   }
 
@@ -64,6 +79,7 @@
       columns: 2;
       column-gap: 0.75rem;
       gap: 0.75rem;
+      @apply grid-cols-2 gap-4;
     }
   }
 
@@ -72,6 +88,7 @@
       columns: 3;
       column-gap: 1rem;
       gap: 1rem;
+      @apply grid-cols-3 gap-6;
     }
   }
 
@@ -80,6 +97,7 @@
       columns: 4;
       column-gap: 1.25rem;
       gap: 1.25rem;
+      @apply grid-cols-4 gap-8;
     }
   }
 
@@ -88,20 +106,21 @@
       columns: 4;
       column-gap: 1.5rem;
       gap: 1.5rem;
+      @apply grid-cols-5 gap-8;
     }
   }
 
+  /* Photo items */
   .photo-item {
     @apply relative overflow-hidden rounded-lg cursor-pointer mb-2 sm:mb-3 lg:mb-4;
     break-inside: avoid;
     display: block;
     width: 100%;
     page-break-inside: avoid;
-    contain: layout style paint; /* Performance optimization */
-    will-change: opacity; /* Optimize for fade-in */
+    contain: layout style paint;
+    will-change: opacity;
   }
 
-  /* Mobile optimizations */
   @media (max-width: 640px) {
     .photo-item {
       margin-bottom: 0.5rem;
@@ -111,9 +130,8 @@
 
   .photo-item img,
   .photo-item picture {
-    @apply w-full h-auto;
+    @apply w-full h-full object-cover;
     display: block;
-    object-fit: cover;
     aspect-ratio: auto;
     max-width: 100%;
     height: auto;
@@ -125,18 +143,13 @@
     height: 100%;
   }
 
-  /* Ensure masonry layout works properly */
   .photo-grid > * {
     break-inside: avoid;
     page-break-inside: avoid;
     margin-bottom: 1rem;
   }
 
-  .photo-item img {
-    @apply w-full h-full object-cover;
-  }
-
-  /* Photo fade-in animation - improved for performance */
+  /* Photo animations */
   .photo-fade-in {
     opacity: 0;
     transition: opacity 1s ease-out;
@@ -151,6 +164,7 @@
     @apply absolute inset-0 bg-black/0 flex items-center justify-center;
   }
 
+  /* Lightbox */
   .lightbox {
     @apply fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-2;
   }
@@ -168,12 +182,12 @@
     -moz-image-smoothing: auto !important;
     -o-image-smoothing: auto !important;
     -ms-image-smoothing: auto !important;
-    /* Ensure smooth scaling */
     transform: translateZ(0);
     backface-visibility: hidden;
     perspective: 1000px;
   }
 
+  /* Navigation buttons */
   .nav-button {
     @apply px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-sm;
   }
@@ -186,10 +200,13 @@
     @apply bg-gray-700/60 text-gray-300 hover:bg-gray-600/70 hover:text-white shadow-md;
   }
 
-  /* Responsive navigation improvements */
   @media (max-width: 768px) {
     .nav-button {
       @apply px-2 py-1 text-xs;
+    }
+    
+    .mobile-menu-container {
+      position: relative;
     }
   }
 
@@ -199,7 +216,7 @@
     }
   }
 
-  /* Hero section - full window height */
+  /* Hero section */
   .hero-container {
     position: relative;
     width: 100vw;
@@ -207,8 +224,8 @@
     margin-left: calc(-50vw + 50%);
     margin-right: calc(-50vw + 50%);
     overflow: hidden;
-    max-width: 100vw; /* Prevent overflow */
-    box-sizing: border-box; /* Ensure proper sizing */
+    max-width: 100vw;
+    box-sizing: border-box;
   }
 
   .hero-container > div {
@@ -227,51 +244,13 @@
     object-position: center;
   }
 
-  /* Smooth category transitions */
-  .photo-grid {
-    transition: opacity 0.2s ease-in-out;
-  }
-
+  /* Transitions */
   .category-title {
     transition: opacity 0.2s ease-in-out;
   }
 }
 
-/* Prevent image dragging and selection */
-img {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-user-drag: none;
-  -khtml-user-drag: none;
-  -moz-user-drag: none;
-  -o-user-drag: none;
-  user-drag: none;
-  pointer-events: auto;
-}
-
-/* Production optimizations */
-* {
-  box-sizing: border-box;
-}
-
-/* Optimize scrolling performance */
-html {
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Optimize body scrolling */
-body {
-  overflow-y: scroll;
-  scrollbar-gutter: stable;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Custom scrollbar - always visible to prevent layout shifts */
+/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -291,29 +270,8 @@ body {
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Firefox scrollbar - always visible */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.1);
-}
-
-/* Force scrollbar to always be visible */
-html {
-  overflow-y: scroll;
-}
-
-/* Prevent scrollbar flash during loading */
-body {
-  overflow-y: scroll;
-  scrollbar-gutter: stable;
-}
-
 /* Mobile optimizations */
 @media (max-width: 640px) {
-  .photo-grid {
-    @apply grid-cols-1 gap-3;
-  }
-
   .nav-button {
     @apply px-3 py-2 text-sm;
   }
@@ -326,69 +284,14 @@ body {
     @apply max-w-[calc(100vw-1rem)] max-h-[calc(100vh-1rem)];
   }
 
-  /* Additional mobile overflow prevention */
-  body {
+  body, main, nav, .hero-container {
     overflow-x: hidden !important;
     max-width: 100vw !important;
     width: 100% !important;
   }
 
   main {
-    overflow-x: hidden !important;
-    max-width: 100vw !important;
-    width: 100% !important;
     padding-left: 1rem !important;
     padding-right: 1rem !important;
-  }
-
-  nav {
-    overflow-x: hidden !important;
-    max-width: 100vw !important;
-    width: 100% !important;
-  }
-
-  .hero-container {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    overflow: hidden !important;
-  }
-}
-
-/* Mobile dropdown menu */
-@media (max-width: 768px) {
-  .nav-button {
-    @apply px-2 py-1 text-xs;
-  }
-  
-  .mobile-menu-container {
-    position: relative;
-  }
-}
-
-/* Tablet optimizations */
-@media (min-width: 641px) and (max-width: 1024px) {
-  .photo-grid {
-    @apply grid-cols-2 gap-4;
-  }
-}
-
-/* Large screen optimizations */
-@media (min-width: 1025px) {
-  .photo-grid {
-    @apply grid-cols-3 gap-6;
-  }
-}
-
-/* Extra large screen optimizations */
-@media (min-width: 1280px) {
-  .photo-grid {
-    @apply grid-cols-4 gap-8;
-  }
-}
-
-/* 2XL screen optimizations */
-@media (min-width: 1536px) {
-  .photo-grid {
-    @apply grid-cols-5 gap-8;
   }
 }

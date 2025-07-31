@@ -15,7 +15,7 @@ export const PhotoProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastFetch, setLastFetch] = useState(0);
-  const [cacheTimeout, setCacheTimeout] = useState(5 * 60 * 1000); // 5 minutes in ms
+  const cacheTimeout = 5 * 60 * 1000; // 5 minutes in ms
 
 
 
