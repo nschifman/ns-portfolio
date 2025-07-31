@@ -8,16 +8,11 @@ function Gallery() {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [lightboxSize, setLightboxSize] = useState({ width: 0, height: 0 });
   const [heroPhotoIndex, setHeroPhotoIndex] = useState(0);
-  const [loadedImages, setLoadedImages] = useState(new Set());
-  const [visibleImages, setVisibleImages] = useState(new Set());
-  const [isCategoryTransitioning, setIsCategoryTransitioning] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isHeroVisible, setIsHeroVisible] = useState(false);
   const observerRef = useRef(null);
-  const heroObserverRef = useRef(null);
   const observerOptions = useMemo(() => ({
-    rootMargin: '50px 0px', // Reduced for better performance
+    rootMargin: '50px 0px',
     threshold: 0.1
   }), []);
 
@@ -41,58 +36,7 @@ function Gallery() {
     return currentCategory ? getPhotosByCategory(currentCategory) : getAllPhotos();
   }, [currentCategory, getPhotosByCategory, getAllPhotos]);
 
-  // Handle category transitions smoothly
-  useEffect(() => {
-    setIsMobileMenuOpen(false); // Close mobile menu on category change
-    
-    // Start transition
-    setIsCategoryTransitioning(true);
-    
-    // After fade out, update content and fade in
-    const timer = setTimeout(() => {
-      setIsCategoryTransitioning(false);
-    }, 300); // Shorter duration for better UX
-    
-    return () => clearTimeout(timer);
-  }, [currentCategory]);
-
-  // Hero intersection observer - only load hero images when hero section is visible
-  useEffect(() => {
-    if (heroObserverRef.current) {
-      heroObserverRef.current.disconnect();
-    }
-
-    heroObserverRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsHeroVisible(true);
-            // Preload hero images when hero section becomes visible
-            const heroPhotos = getPhotosByCategory('hero');
-            heroPhotos.forEach(photo => {
-              if (photo.src) {
-                const img = new Image();
-                img.src = photo.src;
-                img.loading = 'eager';
-                img.decoding = 'sync';
-              }
-            });
-          } else {
-            setIsHeroVisible(false);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    return () => {
-      if (heroObserverRef.current) {
-        heroObserverRef.current.disconnect();
-      }
-    };
-  }, [getPhotosByCategory]);
-
-  // Optimized Intersection Observer for scroll-based loading
+  // Simple Intersection Observer for lazy loading
   useEffect(() => {
     if (observerRef.current) {
       observerRef.current.disconnect();
@@ -100,22 +44,14 @@ function Gallery() {
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        const newVisibleImages = new Set(visibleImages);
-        let hasChanges = false;
-        
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const photoId = entry.target.dataset.photoId;
-            if (photoId && !newVisibleImages.has(photoId)) {
-              newVisibleImages.add(photoId);
-              hasChanges = true;
+            const img = entry.target.querySelector('img');
+            if (img && !img.src) {
+              img.src = img.dataset.src;
             }
           }
         });
-        
-        if (hasChanges) {
-          setVisibleImages(newVisibleImages);
-        }
       },
       observerOptions
     );
@@ -125,32 +61,23 @@ function Gallery() {
         observerRef.current.disconnect();
       }
     };
-  }, [observerOptions, visibleImages]);
-
-  // Handle image load with proper state management
-  const handleImageLoad = useCallback((photoId) => {
-    setLoadedImages(prev => {
-      if (prev.has(photoId)) return prev;
-      return new Set(prev).add(photoId);
-    });
-  }, []);
+  }, [observerOptions]);
 
   // Handle photo click for lightbox
   const handlePhotoClick = useCallback((photo) => {
     setSelectedPhoto(photo);
-    document.body.style.overflow = 'hidden'; // Prevent background scroll
+    document.body.style.overflow = 'hidden';
   }, []);
 
   // Close lightbox
   const closeLightbox = useCallback(() => {
     setSelectedPhoto(null);
-    document.body.style.overflow = 'auto'; // Restore scroll
+    document.body.style.overflow = 'auto';
   }, []);
 
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeydown = (e) => {
-      // Escape key to close lightbox
       if (e.key === 'Escape' && selectedPhoto) {
         closeLightbox();
       }
@@ -160,39 +87,32 @@ function Gallery() {
     return () => document.removeEventListener('keydown', handleKeydown);
   }, [selectedPhoto, closeLightbox]);
 
-  // Calculate lightbox size for responsive fit with debouncing
+  // Calculate lightbox size for responsive fit
   useEffect(() => {
-    let timeoutId;
     const updateLightboxSize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-        const padding = windowWidth <= 640 ? 16 : 32; // Responsive padding
-        
-        setLightboxSize({
-          width: windowWidth - padding,
-          height: windowHeight - padding
-        });
-      }, 100); // Debounce resize events
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      const padding = windowWidth <= 640 ? 16 : 32;
+      
+      setLightboxSize({
+        width: windowWidth - padding,
+        height: windowHeight - padding
+      });
     };
 
     updateLightboxSize();
     window.addEventListener('resize', updateLightboxSize);
-    return () => {
-      window.removeEventListener('resize', updateLightboxSize);
-      clearTimeout(timeoutId);
-    };
+    return () => window.removeEventListener('resize', updateLightboxSize);
   }, []);
 
-  // Optimized hero photo rotation with smoother transitions
+  // Simple hero photo rotation
   useEffect(() => {
     const heroPhotos = getPhotosByCategory('hero');
     if (heroPhotos.length === 0) return;
 
     const interval = setInterval(() => {
       setHeroPhotoIndex((prev) => (prev + 1) % heroPhotos.length);
-    }, 60000); // 60 seconds for better performance
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [getPhotosByCategory]);
@@ -209,7 +129,7 @@ function Gallery() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMobileMenuOpen]);
 
-  // Memoized error component with better retry functionality
+  // Error component
   const ErrorComponent = useMemo(() => (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="text-center max-w-md mx-auto px-4">
@@ -223,13 +143,13 @@ function Gallery() {
         <div className="space-y-3">
           <button 
             onClick={() => window.location.reload()} 
-            className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+            className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium"
           >
             Refresh Page
           </button>
           <button 
             onClick={refreshPhotos} 
-            className="w-full px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
+            className="w-full px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium"
           >
             Try Again
           </button>
@@ -238,7 +158,7 @@ function Gallery() {
     </div>
   ), [error]);
 
-  // Memoized empty state component with better messaging
+  // Empty state component
   const EmptyStateComponent = useMemo(() => (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="text-center max-w-md mx-auto px-4">
@@ -251,7 +171,7 @@ function Gallery() {
         </div>
         <button 
           onClick={refreshPhotos} 
-          className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+          className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium"
         >
           Refresh
         </button>
@@ -259,7 +179,7 @@ function Gallery() {
     </div>
   ), [refreshPhotos]);
 
-  // Improved loading state with better visual feedback
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -271,14 +191,11 @@ function Gallery() {
     );
   }
   
-  // Improved error state with retry functionality
   if (error) return ErrorComponent;
-  
-  // Improved empty state with better messaging
   if (photos.length === 0) return EmptyStateComponent;
 
   return (
-    <div className="min-h-screen bg-black transition-colors duration-200 flex flex-col">
+    <div className="min-h-screen bg-black flex flex-col">
       {/* Navigation */}
       <nav className="sticky top-0 z-40 bg-black/95 backdrop-blur-sm border-b border-gray-800">
         <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
@@ -305,19 +222,17 @@ function Gallery() {
                 // Mobile navigation with dropdown
                 <div className="relative mobile-menu-container">
                   <div className="flex items-center justify-center">
-                    {/* Dropdown button */}
                     <button
                       onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                       className="nav-button-inactive flex items-center space-x-2 px-4 py-2 rounded-lg"
                     >
                       <span className="text-sm font-medium">Categories</span>
-                      <svg className={`h-4 w-4 transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`h-4 w-4 ${isMobileMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
                   </div>
                   
-                  {/* Background overlay when dropdown is open */}
                   {isMobileMenuOpen && (
                     <div 
                       className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
@@ -325,7 +240,6 @@ function Gallery() {
                     />
                   )}
                   
-                  {/* Dropdown menu */}
                   {isMobileMenuOpen && (
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 w-56 bg-gray-900/98 backdrop-blur-md border border-gray-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
                       <div className="py-2">
@@ -333,7 +247,7 @@ function Gallery() {
                           <Link
                             key={cat}
                             to={`/${cat}`}
-                            className={`block px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                            className={`block px-4 py-3 text-sm font-medium ${
                               currentCategory === cat 
                                 ? 'bg-blue-500/90 text-white shadow-lg' 
                                 : 'text-gray-300 hover:bg-gray-800/80 hover:text-white'
@@ -381,7 +295,7 @@ function Gallery() {
                     href="https://instagram.com/nschify"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-400/70 hover:text-white/90 transition-all duration-300 p-2 rounded-lg hover:bg-white/10 flex items-center"
+                    className="text-gray-400/70 hover:text-white/90 p-2 rounded-lg hover:bg-white/10 flex items-center"
                   >
                     <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
@@ -398,7 +312,7 @@ function Gallery() {
                     href="https://instagram.com/nschify"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-400/70 hover:text-white/90 transition-all duration-300 p-2 rounded-lg hover:bg-white/10 flex items-center"
+                    className="text-gray-400/70 hover:text-white/90 p-2 rounded-lg hover:bg-white/10 flex items-center"
                   >
                     <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
@@ -412,25 +326,16 @@ function Gallery() {
       </nav>
 
       {/* Main Content */}
-      <main className={`max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 flex-1 min-h-[400px] ${
-        isCategoryTransitioning ? 'category-slide-enter' : ''
-      }`}>
-        {/* Hero Section with Photo Backdrop - Full Window Size */}
+      <main className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 flex-1 min-h-[400px]">
+        {/* Hero Section - Full Window Size */}
         {!currentCategory && (() => {
           const heroPhotos = getPhotosByCategory('hero');
           const currentHeroPhoto = heroPhotos[heroPhotoIndex];
           
           return (
-            <div 
-              className="hero-container -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12 2xl:-mx-16 mb-8 sm:mb-12"
-              ref={(el) => {
-                if (el && heroObserverRef.current) {
-                  heroObserverRef.current.observe(el);
-                }
-              }}
-            >
+            <div className="hero-container -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12 2xl:-mx-16 mb-8 sm:mb-12">
               <div className="relative h-screen w-full overflow-hidden">
-                {currentHeroPhoto && isHeroVisible && (
+                {currentHeroPhoto && (
                   <picture>
                     {/* Mobile (up to 640px) */}
                     <source
@@ -451,7 +356,7 @@ function Gallery() {
                     <img
                       src={currentHeroPhoto.previewSrc || currentHeroPhoto.src}
                       alt={currentHeroPhoto.alt}
-                      className="hero-image hero-fade"
+                      className="hero-image"
                       loading="eager"
                       decoding="async"
                       fetchPriority="high"
@@ -476,9 +381,7 @@ function Gallery() {
         
         {/* Category Title */}
         {currentCategory && (
-          <div className={`mb-6 transition-all duration-300 ease-in-out ${
-            isCategoryTransitioning ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'
-          }`}>
+          <div className="mb-6">
             <h2 className="text-2xl font-medium text-white mb-1">
               {currentCategory.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
             </h2>
@@ -489,69 +392,55 @@ function Gallery() {
         )}
         
         {/* Photo Grid */}
-        <div className={`photo-grid photo-grid-optimized transition-all duration-300 ease-in-out ${
-          isCategoryTransitioning ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'
-        }`}>
-          {currentPhotos.map((photo) => {
-            const isVisible = visibleImages.has(photo.id);
-            const isLoaded = loadedImages.has(photo.id);
+        <div className="photo-grid">
+          {currentPhotos.map((photo) => (
+            <div
+              key={photo.id}
+              className="photo-item group"
+              ref={(el) => {
+                if (el && observerRef.current) {
+                  observerRef.current.observe(el);
+                }
+              }}
+              onClick={() => handlePhotoClick(photo)}
+            >
+              <picture>
+                {/* Mobile (up to 640px) */}
+                <source
+                  media="(max-width: 640px)"
+                  srcSet={photo.mobilePreviewSrc || photo.previewSrc || photo.src}
+                />
+                {/* Tablet (641px to 1024px) */}
+                <source
+                  media="(min-width: 641px) and (max-width: 1024px)"
+                  srcSet={photo.tabletPreviewSrc || photo.previewSrc || photo.src}
+                />
+                {/* Desktop (1025px and up) */}
+                <source
+                  media="(min-width: 1025px)"
+                  srcSet={photo.desktopPreviewSrc || photo.previewSrc || photo.src}
+                />
+                {/* Fallback */}
+                <img
+                  src={photo.previewSrc || photo.src}
+                  alt={photo.alt}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                />
+              </picture>
             
-            return (
-              <div
-                key={photo.id}
-                className={`photo-item group ${isVisible ? 'visible' : ''}`}
-                data-photo-id={photo.id}
-                ref={(el) => {
-                  if (el && observerRef.current) {
-                    observerRef.current.observe(el);
-                  }
-                }}
-                onClick={() => handlePhotoClick(photo)}
-              >
-                {isVisible && (
-                  <picture>
-                    {/* Mobile (up to 640px) */}
-                    <source
-                      media="(max-width: 640px)"
-                      srcSet={photo.mobilePreviewSrc || photo.previewSrc || photo.src}
-                    />
-                    {/* Tablet (641px to 1024px) */}
-                    <source
-                      media="(min-width: 641px) and (max-width: 1024px)"
-                      srcSet={photo.tabletPreviewSrc || photo.previewSrc || photo.src}
-                    />
-                    {/* Desktop (1025px and up) */}
-                    <source
-                      media="(min-width: 1025px)"
-                      srcSet={photo.desktopPreviewSrc || photo.previewSrc || photo.src}
-                    />
-                    {/* Fallback */}
-                    <img
-                      src={photo.previewSrc || photo.src}
-                      alt={photo.alt}
-                      className={`w-full h-full object-cover group-hover:scale-102 transition-optimized ${
-                        isLoaded ? 'opacity-100' : 'opacity-0'
-                      }`}
-                      loading="lazy"
-                      decoding="async"
-                      fetchPriority="high"
-                      onLoad={() => handleImageLoad(photo.id)}
-                      onContextMenu={(e) => e.preventDefault()}
-                      onDragStart={(e) => e.preventDefault()}
-                    />
-                  </picture>
-                )}
-              
-                <div className="photo-overlay group-hover:bg-black/20">
-                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
-                    <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                    </svg>
-                  </div>
+              <div className="photo-overlay group-hover:bg-black/20">
+                <div className="opacity-0 group-hover:opacity-100">
+                  <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                  </svg>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </main>
 
@@ -566,7 +455,7 @@ function Gallery() {
               href="https://instagram.com/nschify"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-gray-400 hover:text-white"
             >
               <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
@@ -576,7 +465,7 @@ function Gallery() {
         </div>
       </footer>
 
-      {/* Responsive Lightbox */}
+      {/* Lightbox */}
       {selectedPhoto && (
         <div className="lightbox" onClick={closeLightbox}>
           <img
@@ -593,7 +482,7 @@ function Gallery() {
           />
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
+            className="absolute top-4 right-4 text-white hover:text-gray-300"
           >
             <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

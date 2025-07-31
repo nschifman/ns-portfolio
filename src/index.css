@@ -6,13 +6,11 @@
   body {
     @apply bg-black text-white;
     font-feature-settings: "rlig" 1, "calt" 1;
-    /* Optimize for performance */
     text-rendering: optimizeSpeed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   
-  /* Optimize image rendering */
   img {
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
@@ -20,10 +18,6 @@
 }
 
 @layer components {
-  .scale-102 {
-    transform: scale(1.01);
-    transition: transform 0.8s ease-out;
-  }
   .photo-grid {
     @apply gap-2 sm:gap-3 lg:gap-4;
     columns: 2;
@@ -78,14 +72,6 @@
     display: block;
     width: 100%;
     page-break-inside: avoid;
-    /* Optimize for performance */
-    will-change: transform;
-    transform: translateZ(0);
-    /* Improve loading performance */
-    content-visibility: auto;
-    contain-intrinsic-size: 0 500px;
-    /* Optimize paint and layout */
-    contain: layout style paint;
   }
 
   /* Mobile optimizations */
@@ -93,7 +79,6 @@
     .photo-item {
       margin-bottom: 0.5rem;
       border-radius: 0.5rem;
-      contain-intrinsic-size: 0 300px;
     }
   }
 
@@ -105,11 +90,7 @@
     aspect-ratio: auto;
     max-width: 100%;
     height: auto;
-    /* Optimize image rendering */
     image-rendering: auto;
-    backface-visibility: hidden;
-    /* Simplified transition - only opacity */
-    transition: opacity 0.5s ease-in-out;
   }
 
   .photo-item picture {
@@ -126,22 +107,10 @@
 
   .photo-item img {
     @apply w-full h-full object-cover;
-    /* Simplified transition - only opacity */
-    transition: opacity 0.5s ease-in-out;
   }
 
-  /* Remove conflicting opacity rules */
-  .photo-item img:not([src]) {
-    opacity: 0;
-  }
-
-  .photo-item img[src] {
-    opacity: 1;
-  }
-
-  /* Remove the conflicting loaded/not-loaded classes */
   .photo-overlay {
-    @apply absolute inset-0 bg-black/0 transition-opacity duration-300 flex items-center justify-center;
+    @apply absolute inset-0 bg-black/0 flex items-center justify-center;
   }
 
   .lightbox {
@@ -153,7 +122,7 @@
   }
 
   .nav-button {
-    @apply px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 backdrop-blur-sm;
+    @apply px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-sm;
   }
 
   .nav-button-active {
@@ -177,36 +146,14 @@
     }
   }
 
-  /* Hero animation - smoother transitions */
-  .hero-fade {
-    @apply transition-opacity duration-1000 ease-in-out;
-    /* Prevent vertical loading issues */
-    object-fit: cover;
-    object-position: center;
-    /* Optimize rendering */
-    will-change: opacity;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    /* Ensure proper aspect ratio */
-    aspect-ratio: auto;
-    /* Prevent layout shifts */
-    contain: layout style paint;
-  }
-
-  /* Hero container optimizations */
+  /* Hero section - no animations */
   .hero-container {
     position: relative;
     width: 100%;
     height: 100vh;
     overflow: hidden;
-    /* Prevent layout shifts */
-    contain: layout style;
-    /* Optimize rendering */
-    will-change: transform;
-    transform: translateZ(0);
   }
 
-  /* Hero image optimizations */
   .hero-image {
     position: absolute;
     top: 0;
@@ -215,14 +162,6 @@
     height: 100%;
     object-fit: cover;
     object-position: center;
-    /* Prevent vertical loading issues */
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    /* Optimize loading */
-    image-rendering: auto;
-    /* Prevent layout shifts */
-    contain: layout style paint;
   }
 }
 
@@ -238,20 +177,6 @@ img {
   -o-user-drag: none;
   user-drag: none;
   pointer-events: auto;
-}
-
-/* Optimize image loading transitions */
-.photo-item img {
-  transition: opacity 0.5s ease-in-out;
-  /* Optimize rendering */
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-/* Optimize hero images */
-.hero-fade {
-  will-change: auto; /* Only change when needed */
-  backface-visibility: hidden;
 }
 
 /* Production optimizations */
@@ -272,75 +197,6 @@ body {
   scrollbar-gutter: stable;
 }
 
-/* Reduce layout shifts */
-.photo-item {
-  contain: layout style paint;
-}
-
-/* Optimize animations */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Performance optimizations */
-.photo-grid {
-  contain: layout style;
-  will-change: transform, opacity;
-  min-height: 200px; /* Prevent layout jumping */
-  /* Optimize rendering performance */
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-/* Optimize lightbox performance */
-.lightbox {
-  contain: layout style paint;
-  will-change: opacity;
-  transform: translateZ(0);
-}
-
-/* Optimize image loading performance */
-.photo-item img {
-  contain: layout style paint;
-  will-change: opacity;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-/* Background preloader optimizations */
-.preload-image {
-  position: absolute;
-  top: -9999px;
-  left: -9999px;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-  contain: layout style paint;
-}
-
-.lightbox {
-  contain: layout style paint;
-  will-change: transform;
-}
-
-/* Optimize navigation performance */
-nav {
-  contain: layout style;
-  will-change: auto;
-}
-
-/* Prevent layout shifts during transitions */
-main {
-  contain: layout style;
-  will-change: auto;
-  min-height: 400px;
-}
-
 /* Custom scrollbar - always visible to prevent layout shifts */
 ::-webkit-scrollbar {
   width: 8px;
@@ -355,7 +211,6 @@ main {
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -377,24 +232,6 @@ html {
 body {
   overflow-y: scroll;
   scrollbar-gutter: stable;
-}
-
-/* Smooth category transitions */
-.page-transition {
-  @apply transition-all duration-500 ease-in-out;
-}
-
-/* Category transition animations */
-.category-slide-enter {
-  opacity: 0;
-  transform: translateY(2px);
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-}
-
-/* Prevent layout shifts during transitions */
-.photo-grid {
-  min-height: 200px;
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
 
 /* Mobile optimizations */
@@ -422,17 +259,8 @@ body {
     @apply px-2 py-1 text-xs;
   }
   
-  /* Mobile navigation improvements */
   .mobile-menu-container {
     position: relative;
-  }
-  
-  .mobile-menu-container button {
-    @apply transition-all duration-200;
-  }
-  
-  .mobile-menu-container button:hover {
-    @apply bg-gray-700/80;
   }
 }
 
@@ -461,83 +289,5 @@ body {
 @media (min-width: 1536px) {
   .photo-grid {
     @apply grid-cols-5 gap-8;
-  }
-}
-
-/* Performance optimizations for faster loading */
-@layer utilities {
-  /* Optimize image loading */
-  .image-optimized {
-    image-rendering: auto;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    transform: translateZ(0);
-    contain: layout style paint;
-  }
-
-  /* Optimize hero images specifically */
-  .hero-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    /* Prevent vertical loading issues */
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    /* Optimize loading */
-    image-rendering: auto;
-    /* Prevent layout shifts */
-    contain: layout style paint;
-    /* Optimize memory usage */
-    will-change: opacity;
-  }
-
-  /* Optimize photo grid loading */
-  .photo-grid-optimized {
-    contain: layout style;
-    will-change: transform, opacity;
-    transform: translateZ(0);
-    backface-visibility: hidden;
-  }
-
-  /* Optimize transitions */
-  .transition-optimized {
-    transition: opacity 0.5s ease-in-out;
-    will-change: opacity;
-    backface-visibility: hidden;
-  }
-
-  /* Optimize scroll performance */
-  .scroll-optimized {
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* Additional performance optimizations */
-@media (prefers-reduced-motion: reduce) {
-  .hero-fade,
-  .photo-item img,
-  .transition-optimized {
-    transition: none !important;
-    animation: none !important;
-  }
-}
-
-/* Optimize for mobile performance */
-@media (max-width: 768px) {
-  .hero-image {
-    /* Reduce memory usage on mobile */
-    will-change: auto;
-  }
-  
-  .photo-item img {
-    /* Optimize mobile image loading */
-    image-rendering: auto;
-    backface-visibility: hidden;
   }
 }
