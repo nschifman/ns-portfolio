@@ -11,6 +11,7 @@ function Gallery() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [visiblePhotos, setVisiblePhotos] = useState(new Set());
+  const [loadedPhotos, setLoadedPhotos] = useState(new Set());
   const observerRef = useRef(null);
   const observerOptions = useMemo(() => ({
     rootMargin: '100px 0px',
@@ -37,7 +38,7 @@ function Gallery() {
     return currentCategory ? getPhotosByCategory(currentCategory) : getAllPhotos();
   }, [currentCategory, getPhotosByCategory, getAllPhotos]);
 
-  // Intersection Observer for lazy loading photos
+  // Optimized Intersection Observer for lazy loading photos
   useEffect(() => {
     if (observerRef.current) {
       observerRef.current.disconnect();
@@ -71,6 +72,11 @@ function Gallery() {
       }
     };
   }, [observerOptions, visiblePhotos]);
+
+  // Handle photo load completion
+  const handlePhotoLoad = useCallback((photoId) => {
+    setLoadedPhotos(prev => new Set(prev).add(photoId));
+  }, []);
 
   // Handle photo click for lightbox
   const handlePhotoClick = useCallback((photo) => {
@@ -388,9 +394,12 @@ function Gallery() {
           );
         })()}
         
+        {/* Gap between hero and photos */}
+        {!currentCategory && <div className="h-16 sm:h-20 lg:h-24"></div>}
+        
         {/* Category Title */}
         {currentCategory && (
-          <div className="mb-6">
+          <div className="mb-6 category-title">
             <h2 className="text-2xl font-medium text-white mb-1">
               {currentCategory.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
             </h2>
@@ -404,6 +413,7 @@ function Gallery() {
         <div className="photo-grid">
           {currentPhotos.map((photo) => {
             const isVisible = visiblePhotos.has(photo.id);
+            const isLoaded = loadedPhotos.has(photo.id);
             
             return (
               <div
@@ -438,9 +448,10 @@ function Gallery() {
                     <img
                       src={photo.previewSrc || photo.src}
                       alt={photo.alt}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover photo-fade-in ${isLoaded ? 'photo-loaded' : ''}`}
                       loading="lazy"
                       decoding="async"
+                      onLoad={() => handlePhotoLoad(photo.id)}
                       onContextMenu={(e) => e.preventDefault()}
                       onDragStart={(e) => e.preventDefault()}
                     />
