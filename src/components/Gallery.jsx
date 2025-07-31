@@ -10,11 +10,10 @@ function Gallery() {
   const [heroPhotoIndex, setHeroPhotoIndex] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [visiblePhotos, setVisiblePhotos] = useState(new Set());
-  const [loadedPhotos, setLoadedPhotos] = useState(new Set());
   const observerRef = useRef(null);
+  const loadedPhotosRef = useRef(new Set());
   const observerOptions = useMemo(() => ({
-    rootMargin: '100px 0px',
+    rootMargin: '200px 0px',
     threshold: 0.1
   }), []);
 
@@ -46,22 +45,11 @@ function Gallery() {
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        const newVisiblePhotos = new Set(visiblePhotos);
-        let hasChanges = false;
-        
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const photoId = entry.target.dataset.photoId;
-            if (photoId && !newVisiblePhotos.has(photoId)) {
-              newVisiblePhotos.add(photoId);
-              hasChanges = true;
-            }
+            // Photo is now visible and will load
           }
         });
-        
-        if (hasChanges) {
-          setVisiblePhotos(newVisiblePhotos);
-        }
       },
       observerOptions
     );
@@ -71,11 +59,16 @@ function Gallery() {
         observerRef.current.disconnect();
       }
     };
-  }, [observerOptions, visiblePhotos]);
+  }, [observerOptions]);
 
   // Handle photo load completion
   const handlePhotoLoad = useCallback((photoId) => {
-    setLoadedPhotos(prev => new Set(prev).add(photoId));
+    loadedPhotosRef.current.add(photoId);
+    // Force re-render only for this specific photo
+    const photoElement = document.querySelector(`[data-photo-id="${photoId}"] img`);
+    if (photoElement) {
+      photoElement.classList.add('photo-loaded');
+    }
   }, []);
 
   // Handle photo click for lightbox
@@ -411,63 +404,56 @@ function Gallery() {
         
         {/* Photo Grid */}
         <div className="photo-grid">
-          {currentPhotos.map((photo) => {
-            const isVisible = visiblePhotos.has(photo.id);
-            const isLoaded = loadedPhotos.has(photo.id);
+          {currentPhotos.map((photo) => (
+            <div
+              key={photo.id}
+              className="photo-item group"
+              data-photo-id={photo.id}
+              ref={(el) => {
+                if (el && observerRef.current) {
+                  observerRef.current.observe(el);
+                }
+              }}
+              onClick={() => handlePhotoClick(photo)}
+            >
+              <picture>
+                {/* Mobile (up to 640px) */}
+                <source
+                  media="(max-width: 640px)"
+                  srcSet={photo.mobilePreviewSrc || photo.previewSrc || photo.src}
+                />
+                {/* Tablet (641px to 1024px) */}
+                <source
+                  media="(min-width: 641px) and (max-width: 1024px)"
+                  srcSet={photo.tabletPreviewSrc || photo.previewSrc || photo.src}
+                />
+                {/* Desktop (1025px and up) */}
+                <source
+                  media="(min-width: 1025px)"
+                  srcSet={photo.desktopPreviewSrc || photo.previewSrc || photo.src}
+                />
+                {/* Fallback */}
+                <img
+                  src={photo.previewSrc || photo.src}
+                  alt={photo.alt}
+                  className="w-full h-full object-cover photo-fade-in"
+                  loading="lazy"
+                  decoding="async"
+                  onLoad={() => handlePhotoLoad(photo.id)}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                />
+              </picture>
             
-            return (
-              <div
-                key={photo.id}
-                className="photo-item group"
-                data-photo-id={photo.id}
-                ref={(el) => {
-                  if (el && observerRef.current) {
-                    observerRef.current.observe(el);
-                  }
-                }}
-                onClick={() => handlePhotoClick(photo)}
-              >
-                {isVisible && (
-                  <picture>
-                    {/* Mobile (up to 640px) */}
-                    <source
-                      media="(max-width: 640px)"
-                      srcSet={photo.mobilePreviewSrc || photo.previewSrc || photo.src}
-                    />
-                    {/* Tablet (641px to 1024px) */}
-                    <source
-                      media="(min-width: 641px) and (max-width: 1024px)"
-                      srcSet={photo.tabletPreviewSrc || photo.previewSrc || photo.src}
-                    />
-                    {/* Desktop (1025px and up) */}
-                    <source
-                      media="(min-width: 1025px)"
-                      srcSet={photo.desktopPreviewSrc || photo.previewSrc || photo.src}
-                    />
-                    {/* Fallback */}
-                    <img
-                      src={photo.previewSrc || photo.src}
-                      alt={photo.alt}
-                      className={`w-full h-full object-cover photo-fade-in ${isLoaded ? 'photo-loaded' : ''}`}
-                      loading="lazy"
-                      decoding="async"
-                      onLoad={() => handlePhotoLoad(photo.id)}
-                      onContextMenu={(e) => e.preventDefault()}
-                      onDragStart={(e) => e.preventDefault()}
-                    />
-                  </picture>
-                )}
-              
-                <div className="photo-overlay group-hover:bg-black/20">
-                  <div className="opacity-0 group-hover:opacity-100">
-                    <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                    </svg>
-                  </div>
+              <div className="photo-overlay group-hover:bg-black/20">
+                <div className="opacity-0 group-hover:opacity-100">
+                  <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                  </svg>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </main>
 

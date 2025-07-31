@@ -20,16 +20,16 @@ export const PhotoProvider = ({ children }) => {
 
 
 
-  // Memoized sorting algorithm: prioritize recency (most recently added first)
+  // Memoized sorting algorithm: prioritize recency (most recently added last - at bottom)
   const sortPhotos = useCallback((photoList) => {
     if (!photoList || photoList.length === 0) return photoList;
     
     return photoList.sort((a, b) => {
-      // Sort by upload/creation date - most recent first
+      // Sort by upload/creation date - most recent last (at bottom)
       const aDate = new Date(a.uploadedAt || a.createdAt || 0);
       const bDate = new Date(b.uploadedAt || b.createdAt || 0);
       
-      return bDate - aDate; // Most recent first
+      return aDate - bDate; // Oldest first, newest at bottom
     });
   }, []);
 
