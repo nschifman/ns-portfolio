@@ -8,6 +8,9 @@ const Gallery = () => {
   
   // Get current photos based on category
   const currentPhotos = category ? getPhotosByCategory(category) : getAllPhotos();
+  
+  // Don't show hero photos in gallery
+  const filteredPhotos = currentPhotos.filter(photo => photo.category !== 'hero');
 
   // Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -29,7 +32,7 @@ const Gallery = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxOpen, selectedPhoto, currentPhotos]);
+  }, [lightboxOpen, selectedPhoto, filteredPhotos]);
 
   const openLightbox = (photo) => {
     setSelectedPhoto(photo);
@@ -37,11 +40,11 @@ const Gallery = () => {
   };
 
   const navigatePhoto = (direction) => {
-    if (!selectedPhoto || !currentPhotos.length) return;
+    if (!selectedPhoto || !filteredPhotos.length) return;
     
-    const currentIndex = currentPhotos.findIndex(p => p.id === selectedPhoto.id);
-    const newIndex = (currentIndex + direction + currentPhotos.length) % currentPhotos.length;
-    setSelectedPhoto(currentPhotos[newIndex]);
+    const currentIndex = filteredPhotos.findIndex(p => p.id === selectedPhoto.id);
+    const newIndex = (currentIndex + direction + filteredPhotos.length) % filteredPhotos.length;
+    setSelectedPhoto(filteredPhotos[newIndex]);
   };
 
   // Error state
@@ -63,7 +66,7 @@ const Gallery = () => {
   }
 
   // Empty state
-  if (!loading && currentPhotos.length === 0) {
+  if (!loading && filteredPhotos.length === 0) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="text-center">
@@ -85,37 +88,7 @@ const Gallery = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-40 bg-black/80 backdrop-blur-sm border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex flex-wrap gap-2 justify-center">
-            <Link 
-              to="/" 
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                !category 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
-              }`}
-            >
-              All Photos
-            </Link>
-            {categories.map(cat => (
-              <Link
-                key={cat}
-                to={`/category/${cat}`}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  category === cat 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
-                }`}
-              >
-                {cat}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </nav>
+    <div className="bg-black">
 
       {/* Loading state */}
       {loading && (
@@ -128,10 +101,10 @@ const Gallery = () => {
       )}
 
       {/* Photo grid */}
-      {!loading && currentPhotos.length > 0 && (
+      {!loading && filteredPhotos.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {currentPhotos.map((photo) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {filteredPhotos.map((photo) => (
               <div
                 key={photo.id}
                 className="group relative aspect-[3/4] overflow-hidden rounded-lg cursor-pointer"
@@ -191,7 +164,11 @@ const Gallery = () => {
             <img
               src={selectedPhoto.src}
               alt={selectedPhoto.alt || selectedPhoto.title || 'Photo'}
-              className="max-w-full max-h-full object-contain"
+              className="max-w-[90vw] max-h-[90vh] object-contain"
+              style={{
+                maxWidth: 'min(90vw, 90vh * (16/9))',
+                maxHeight: 'min(90vh, 90vw * (9/16))'
+              }}
             />
             
             {/* Photo info */}
