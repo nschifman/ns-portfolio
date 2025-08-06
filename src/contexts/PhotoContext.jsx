@@ -136,9 +136,5 @@ export const PhotoProvider = ({ children }) => {
     loadPhotos
   }), [photos, loading, error, categories, getPhotosByCategory, getAllPhotos, refreshPhotos, loadPhotos]);
 
-  return (
-    <PhotoContext.Provider value={value}>
-      {children}
-    </PhotoContext.Provider>
-  );
+  return React.createElement(PhotoContext.Provider, { value }, children);
 }; 

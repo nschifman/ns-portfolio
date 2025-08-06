@@ -76,135 +76,118 @@ const Gallery = () => {
 
   // Error component
   if (error) {
-    return (
-      <div className="error-container">
-        <h2>Error Loading Photos</h2>
-        <p>{error}</p>
-        <button onClick={() => window.location.reload()}>Try Again</button>
-      </div>
+    return React.createElement('div', { className: 'error-container' },
+      React.createElement('h2', null, 'Error Loading Photos'),
+      React.createElement('p', null, error),
+      React.createElement('button', { onClick: () => window.location.reload() }, 'Try Again')
     );
   }
 
   // Empty state component
   if (!loading && currentPhotos.length === 0) {
-    return (
-      <div className="empty-state">
-        <h2>No Photos Found</h2>
-        <p>{category ? `No photos in the "${category}" category.` : 'No photos available.'}</p>
-        {category && (
-          <Link to="/" className="back-link">← Back to All Photos</Link>
-        )}
-      </div>
+    return React.createElement('div', { className: 'empty-state' },
+      React.createElement('h2', null, 'No Photos Found'),
+      React.createElement('p', null, category ? `No photos in the "${category}" category.` : 'No photos available.'),
+      category && React.createElement(Link, { to: '/', className: 'back-link' }, '← Back to All Photos')
     );
   }
 
-  return (
-    <div className="gallery-container">
-      {/* Navigation */}
-      <nav className="gallery-nav">
-        <Link to="/" className={`nav-button ${!category ? 'active' : ''}`}>
-          All Photos
-        </Link>
-        {categories.map(cat => (
-          <Link 
-            key={cat} 
-            to={`/category/${cat}`} 
-            className={`nav-button ${category === cat ? 'active' : ''}`}
-          >
-            {cat}
-          </Link>
-        ))}
-      </nav>
+  return React.createElement('div', { className: 'gallery-container' },
+    // Navigation
+    React.createElement('nav', { className: 'gallery-nav' },
+      React.createElement(Link, { 
+        to: '/', 
+        className: `nav-button ${!category ? 'active' : ''}` 
+      }, 'All Photos'),
+      ...categories.map(cat => 
+        React.createElement(Link, {
+          key: cat,
+          to: `/category/${cat}`,
+          className: `nav-button ${category === cat ? 'active' : ''}`
+        }, cat)
+      )
+    ),
 
-      {/* Loading state */}
-      {loading && (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading photos...</p>
-        </div>
-      )}
+    // Loading state
+    loading && React.createElement('div', { className: 'loading-container' },
+      React.createElement('div', { className: 'loading-spinner' }),
+      React.createElement('p', null, 'Loading photos...')
+    ),
 
-      {/* Photo grid */}
-      {!loading && currentPhotos.length > 0 && (
-        <div className="photo-grid">
-          {currentPhotos.map((photo) => (
-            <div 
-              key={photo.id} 
-              className="photo-item"
-              onClick={() => openLightbox(photo)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  openLightbox(photo);
-                }
-              }}
-            >
-              <picture>
-                <source 
-                  media="(min-width: 1024px)" 
-                  srcSet={photo.desktopPreviewSrc || photo.src}
-                />
-                <source 
-                  media="(min-width: 768px)" 
-                  srcSet={photo.tabletPreviewSrc || photo.src}
-                />
-                <img
-                  src={photo.mobilePreviewSrc || photo.src}
-                  alt={photo.alt || photo.title || 'Photo'}
-                  loading="lazy"
-                  onTouchStart={() => {}}
-                  onTouchEnd={() => {}}
-                />
-              </picture>
-              <div className="photo-overlay">
-                <h3>{photo.title || 'Untitled'}</h3>
-                {photo.description && <p>{photo.description}</p>}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+    // Photo grid
+    !loading && currentPhotos.length > 0 && React.createElement('div', { className: 'photo-grid' },
+      ...currentPhotos.map((photo) => 
+        React.createElement('div', {
+          key: photo.id,
+          className: 'photo-item',
+          onClick: () => openLightbox(photo),
+          role: 'button',
+          tabIndex: 0,
+          onKeyDown: (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openLightbox(photo);
+            }
+          }
+        },
+          React.createElement('picture', null,
+            React.createElement('source', {
+              media: '(min-width: 1024px)',
+              srcSet: photo.desktopPreviewSrc || photo.src
+            }),
+            React.createElement('source', {
+              media: '(min-width: 768px)',
+              srcSet: photo.tabletPreviewSrc || photo.src
+            }),
+            React.createElement('img', {
+              src: photo.mobilePreviewSrc || photo.src,
+              alt: photo.alt || photo.title || 'Photo',
+              loading: 'lazy',
+              onTouchStart: () => {},
+              onTouchEnd: () => {}
+            })
+          ),
+          React.createElement('div', { className: 'photo-overlay' },
+            React.createElement('h3', null, photo.title || 'Untitled'),
+            photo.description && React.createElement('p', null, photo.description)
+          )
+        )
+      )
+    ),
 
-      {/* Lightbox */}
-      {lightboxOpen && selectedPhoto && (
-        <div className="lightbox-overlay" role="dialog" aria-label="Photo lightbox">
-          <div className="lightbox-content">
-            <button 
-              className="lightbox-close"
-              onClick={() => setLightboxOpen(false)}
-              aria-label="Close lightbox"
-            >
-              ×
-            </button>
-            <button 
-              className="lightbox-nav prev"
-              onClick={() => navigatePhoto(-1)}
-              aria-label="Previous photo"
-            >
-              ‹
-            </button>
-            <button 
-              className="lightbox-nav next"
-              onClick={() => navigatePhoto(1)}
-              aria-label="Next photo"
-            >
-              ›
-            </button>
-            <img
-              src={selectedPhoto.src}
-              alt={selectedPhoto.alt || selectedPhoto.title || 'Photo'}
-              className="lightbox-image"
-            />
-            <div className="lightbox-info">
-              <h3>{selectedPhoto.title || 'Untitled'}</h3>
-              {selectedPhoto.description && <p>{selectedPhoto.description}</p>}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    // Lightbox
+    lightboxOpen && selectedPhoto && React.createElement('div', {
+      className: 'lightbox-overlay',
+      role: 'dialog',
+      'aria-label': 'Photo lightbox'
+    },
+      React.createElement('div', { className: 'lightbox-content' },
+        React.createElement('button', {
+          className: 'lightbox-close',
+          onClick: () => setLightboxOpen(false),
+          'aria-label': 'Close lightbox'
+        }, '×'),
+        React.createElement('button', {
+          className: 'lightbox-nav prev',
+          onClick: () => navigatePhoto(-1),
+          'aria-label': 'Previous photo'
+        }, '‹'),
+        React.createElement('button', {
+          className: 'lightbox-nav next',
+          onClick: () => navigatePhoto(1),
+          'aria-label': 'Next photo'
+        }, '›'),
+        React.createElement('img', {
+          src: selectedPhoto.src,
+          alt: selectedPhoto.alt || selectedPhoto.title || 'Photo',
+          className: 'lightbox-image'
+        }),
+        React.createElement('div', { className: 'lightbox-info' },
+          React.createElement('h3', null, selectedPhoto.title || 'Untitled'),
+          selectedPhoto.description && React.createElement('p', null, selectedPhoto.description)
+        )
+      )
+    )
   );
 };
 
