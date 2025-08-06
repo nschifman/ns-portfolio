@@ -69,17 +69,17 @@ const Hero = () => {
   
   return (
     <div className="bg-black">
-             {/* Hero Section */}
-       <div className="h-[60vh] relative overflow-hidden">
+      {/* Hero Section */}
+      <div className="h-[60vh] relative overflow-hidden">
         {heroPhotos.length === 0 ? (
-                     // Fallback when no hero photos
-           <div className="min-h-screen bg-black flex items-center justify-center">
-             <div className="text-center">
-               <h1 className="text-3xl md:text-4xl font-light text-white mb-2">
-                 Noah Schifman
-               </h1>
-             </div>
-           </div>
+          // Fallback when no hero photos
+          <div className="h-full bg-black flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-3xl md:text-4xl font-light text-white mb-2">
+                Noah Schifman
+              </h1>
+            </div>
+          </div>
         ) : (
           <>
             {/* Background images with fade transition */}
@@ -99,14 +99,14 @@ const Hero = () => {
               </div>
             ))}
             
-                         {/* Content overlay */}
-             <div className="relative z-10 min-h-screen flex items-center justify-center">
-               <div className="text-center">
-                 <h1 className="text-3xl md:text-4xl font-light text-white mb-2 drop-shadow-lg">
-                   Noah Schifman
-                 </h1>
-               </div>
-             </div>
+            {/* Content overlay */}
+            <div className="relative z-10 h-full flex items-center justify-center">
+              <div className="text-center">
+                <h1 className="text-3xl md:text-4xl font-light text-white mb-2 drop-shadow-lg">
+                  Noah Schifman
+                </h1>
+              </div>
+            </div>
             
             {/* Image counter */}
             {heroPhotos.length > 1 && (
@@ -152,6 +152,61 @@ const Hero = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxOpen && selectedPhoto && (
+        <div
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setLightboxOpen(false);
+          }}
+        >
+          <div className="relative max-w-full max-h-full">
+            {/* Close button */}
+            <button
+              className="absolute -top-12 right-0 text-white text-3xl hover:text-gray-300 z-10"
+              onClick={() => setLightboxOpen(false)}
+            >
+              ×
+            </button>
+            
+            {/* Navigation buttons */}
+            <button
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-4xl hover:text-gray-300 z-10"
+              onClick={() => navigatePhoto(-1)}
+            >
+              ‹
+            </button>
+            <button
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-4xl hover:text-gray-300 z-10"
+              onClick={() => navigatePhoto(1)}
+            >
+              ›
+            </button>
+            
+            {/* Image */}
+            <img
+              src={selectedPhoto.src}
+              alt={selectedPhoto.alt || selectedPhoto.title || 'Photo'}
+              className="max-w-[90vw] max-h-[90vh] object-contain"
+              style={{
+                maxWidth: 'min(90vw, 90vh * (16/9))',
+                maxHeight: 'min(90vh, 90vw * (9/16))'
+              }}
+            />
+            
+            {/* Photo info */}
+            <div className="absolute bottom-4 left-4 right-4 text-white">
+              <h3 className="text-xl font-semibold mb-2">
+                {selectedPhoto.title || selectedPhoto.alt || 'Untitled'}
+              </h3>
+              {selectedPhoto.description && (
+                <p className="text-gray-300">{selectedPhoto.description}</p>
+              )}
+            </div>
           </div>
         </div>
       )}
