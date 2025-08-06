@@ -4,6 +4,7 @@ import { PhotoProvider } from './contexts/PhotoContext';
 import Layout from './components/Layout';
 import Hero from './components/Hero';
 import Gallery from './components/Gallery';
+import NotFound from './components/NotFound';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
             <Route path="/" element={<Hero />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/category/:category" element={<Gallery />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
       </Router>

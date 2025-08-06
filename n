@@ -1,9 +1,0 @@
-[33mffd67f0[m Add background full-size image preloader and optimize site performance - Add background preloader for visible photos' full-size images after site loads - Optimize CSS with better rendering and containment properties - Improve PhotoContext with better caching and compression headers - Add performance optimizations to HTML head and main.jsx - Optimize image rendering and reduce layout shifts - Add requestIdleCallback for non-critical initialization
-[33mc232db3[m Fix category transitions and optimize UX - Fix category transition to only fade out old content - Slow down photo hover zoom effect (0.8s, scale 1.01) - Improve mobile navigation sizing and alignment - Add background overlay to mobile dropdown - Make favicon visible on light/dark browsers - Remove unused CSS animations and optimize code
-[33me6525e0[m Optimize photo preview load speed - preloading, fetch priority, content-visibility, and better loading states
-[33m4910a75[m Optimize image quality and performance - remove oversharpening, improve scrolling, reduce animations
-[33m5f0db29[m Performance optimization: responsive image scaling, mobile improvements, faster load times
-[33ma61dc1a[m Production release: dynamic meta tags, auto-updating categories, performance optimizations, error handling
-[33m420d924[m Performance improvements: camera favicon, remove loading flash, compressed preview images for faster mobile loading
-[33m19e1521[m Optimize site performance: 5min cache, lazy loading, R2 API limits, client-side caching
-[33m4722370[m Fix photo display with R2 proxy and optimize codebase
