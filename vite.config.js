@@ -9,6 +9,7 @@ export default defineConfig({
       jsxRuntime: 'automatic'
     })
   ],
+  base: '/ns-portfolio/',
   server: {
     port: 3000,
     host: true

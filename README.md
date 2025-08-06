@@ -17,7 +17,7 @@ A modern, high-performance photography portfolio built with React, Vite, and Tai
 - **Frontend**: React 18.2.0, React Router DOM 6.8.0
 - **Build Tool**: Vite 5.0.0
 - **Styling**: Tailwind CSS 3.3.5
-- **Deployment**: Cloudflare Pages with Wrangler
+- **Deployment**: GitHub Pages with GitHub Actions
 
 ## Quick Start
 
@@ -97,21 +97,26 @@ src/
 
 ## Deployment
 
-### Cloudflare Pages
+### GitHub Pages (Automatic)
+
+The site automatically deploys to GitHub Pages when you push to the `main` branch. The GitHub Actions workflow:
+
+1. **Builds** the React application using Vite
+2. **Deploys** to GitHub Pages using the `dist` folder
+3. **Handles routing** with HashRouter for SPA compatibility
+
+### Manual Deployment
 
 1. Build the project:
 ```bash
 npm run build
 ```
 
-2. Deploy using Wrangler:
-```bash
-npm run deploy
-```
+2. Deploy the `dist` folder to your hosting provider
 
 ### Environment Variables
 
-Ensure your Cloudflare Pages environment has the necessary API endpoints configured:
+For local development, you may need to configure API endpoints:
 - `/api/manifest` - Photo manifest endpoint
 - `/api/meta` - SEO meta data endpoint
 

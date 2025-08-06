@@ -1,5 +1,5 @@
 import React, { lazy, useEffect, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { PhotoProvider } from './contexts/PhotoContext';
 import DynamicMeta from './components/DynamicMeta';
 
