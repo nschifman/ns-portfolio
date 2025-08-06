@@ -10,10 +10,13 @@ const Hero = () => {
   // Get hero photos - use first 3 photos from any category
   const heroPhotos = photos.slice(0, 3);
   
-  // Get category previews (most recent photo from each category)
+  // Get category previews (most recent photo from each category, excluding hero)
   const getCategoryPreviews = () => {
     const previews = [];
     categories.forEach(category => {
+      // Skip hero category
+      if (category.toLowerCase() === 'hero') return;
+      
       const categoryPhotos = photos.filter(photo => photo.category === category);
       if (categoryPhotos.length > 0) {
         // Get the most recent photo (first in the array since they're sorted by upload date)
@@ -117,8 +120,8 @@ const Hero = () => {
       
              {/* Category Previews Section */}
        {!loading && categoryPreviews.length > 0 && (
-         <div className="max-w-7xl mx-auto px-4 py-12">
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+         <div className="max-w-full mx-auto px-4 md:px-8 lg:px-12 py-12">
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
                           {categoryPreviews.map(({ category, photo }) => {
                const categoryProps = generatePictureProps(photo.src, 'category');
                

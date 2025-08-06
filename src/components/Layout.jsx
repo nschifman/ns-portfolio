@@ -1,14 +1,19 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Layout = ({ children }) => {
   const currentYear = new Date().getFullYear();
+  const location = useLocation();
+  
+  // Check if we're on a subcategory page
+  const isSubcategoryPage = location.pathname.startsWith('/category/');
+  const categoryName = isSubcategoryPage ? location.pathname.split('/')[2] : null;
   
   return (
     <div className="min-h-screen bg-black flex flex-col">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-40 bg-black/80 backdrop-blur-sm border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 py-3">
+      {/* Navigation - Hidden on subcategory pages on desktop, always visible on mobile */}
+      <nav className={`sticky top-0 z-40 bg-black/80 backdrop-blur-sm border-b border-gray-800 ${isSubcategoryPage ? 'md:hidden' : ''}`}>
+                 <div className="max-w-full mx-auto px-4 md:px-8 lg:px-12 py-3">
           <div className="flex items-center justify-between">
             {/* Left side - Home button */}
             <div className="flex items-center">
@@ -21,6 +26,11 @@ const Layout = ({ children }) => {
                   <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                 </svg>
               </Link>
+            </div>
+            
+            {/* Center - Noah Schifman (mobile only) */}
+            <div className="md:hidden">
+              <h1 className="text-lg font-light text-white">Noah Schifman</h1>
             </div>
             
             {/* Right side - Instagram */}
@@ -41,6 +51,29 @@ const Layout = ({ children }) => {
         </div>
       </nav>
       
+      {/* Category Title (desktop only, on subcategory pages) */}
+      {isSubcategoryPage && (
+        <div className="hidden md:block border-b border-gray-800 py-6">
+          <div className="max-w-full mx-auto px-4 md:px-8 lg:px-12">
+            <div className="flex items-center justify-between">
+              <Link 
+                to="/" 
+                className="text-gray-300 hover:text-white transition-colors flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                </svg>
+                <span>Back to Home</span>
+              </Link>
+              <h1 className="text-2xl font-light text-white text-center">
+                {categoryName ? categoryName.charAt(0).toUpperCase() + categoryName.slice(1).toLowerCase() : 'Category'}
+              </h1>
+              <div className="w-32"></div> {/* Spacer for centering */}
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Main content */}
       <main className="flex-1">
         {children}
@@ -48,7 +81,7 @@ const Layout = ({ children }) => {
       
       {/* Footer */}
       <footer className="bg-black border-t border-gray-800 py-4">
-        <div className="max-w-7xl mx-auto px-4 text-center">
+                 <div className="max-w-full mx-auto px-4 md:px-8 lg:px-12 text-center">
                            <p className="text-gray-400 text-base text-render-optimized">
                    © {currentYear} Noah Schifman. All rights reserved.
                  </p>

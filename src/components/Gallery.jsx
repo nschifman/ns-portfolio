@@ -90,19 +90,6 @@ const Gallery = () => {
 
   return (
     <div className="bg-black">
-      {/* Back to Home button */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <Link 
-          to="/" 
-          className="inline-flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
-        >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-          </svg>
-          <span>Back to Home</span>
-        </Link>
-      </div>
-
       {/* Loading state */}
       {loading && (
         <div className="flex items-center justify-center min-h-[50vh]">
@@ -115,8 +102,8 @@ const Gallery = () => {
 
              {/* Photo grid */}
        {!loading && filteredPhotos.length > 0 && (
-         <div className="max-w-7xl mx-auto px-4 py-8">
-           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+         <div className="max-w-full mx-auto px-4 md:px-8 lg:px-12 py-8">
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
              {filteredPhotos.map((photo) => {
                const galleryProps = generatePictureProps(photo.src, 'gallery');
                
@@ -143,9 +130,7 @@ const Gallery = () => {
                    </picture>
                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-end">
                      <div className="p-4 w-full">
-                       <h3 className="text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-base">
-                         {photo.title || photo.alt || 'Untitled'}
-                       </h3>
+                       {/* Removed title display to avoid showing filenames */}
                      </div>
                    </div>
                  </div>
@@ -214,9 +199,7 @@ const Gallery = () => {
             
             {/* Photo info */}
             <div className="absolute bottom-4 left-4 right-4 text-white">
-                           <h3 className="text-xl font-semibold mb-2 text-render-optimized">
-               {selectedPhoto.title || selectedPhoto.alt || 'Untitled'}
-             </h3>
+                           {/* Removed title display to avoid showing filenames */}
              {selectedPhoto.description && (
                <p className="text-gray-300 text-base">{selectedPhoto.description}</p>
              )}
