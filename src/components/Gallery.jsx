@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { usePhotos } from '../contexts/PhotoContext';
+import { generatePictureProps } from '../utils/imageOptimization';
 
 const Gallery = () => {
   const { category } = useParams();
@@ -52,8 +53,8 @@ const Gallery = () => {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">Error Loading Photos</h2>
-          <p className="text-gray-400 mb-4">{error}</p>
+                     <h2 className="text-2xl font-bold text-white mb-4 text-render-optimized">Error Loading Photos</h2>
+           <p className="text-gray-400 mb-4 text-base">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -70,10 +71,10 @@ const Gallery = () => {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">No Photos Found</h2>
-          <p className="text-gray-400 mb-4">
-            {category ? `No photos in the "${category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}" category.` : 'No photos available.'}
-          </p>
+                     <h2 className="text-2xl font-bold text-white mb-4 text-render-optimized">No Photos Found</h2>
+           <p className="text-gray-400 mb-4 text-base">
+             {category ? `No photos in the "${category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}" category.` : 'No photos available.'}
+           </p>
           {category && (
             <Link 
               to="/" 
@@ -89,45 +90,70 @@ const Gallery = () => {
 
   return (
     <div className="bg-black">
+      {/* Back to Home button */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+          </svg>
+          <span>Back to Home</span>
+        </Link>
+      </div>
 
       {/* Loading state */}
       {loading && (
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading photos...</p>
+                         <p className="text-gray-400 text-base">Loading photos...</p>
           </div>
         </div>
       )}
 
-      {/* Photo grid */}
-      {!loading && filteredPhotos.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {filteredPhotos.map((photo) => (
-              <div
-                key={photo.id}
-                className="group relative aspect-[3/4] overflow-hidden rounded-lg cursor-pointer"
-                onClick={() => openLightbox(photo)}
-              >
-                <img
-                  src={photo.mobilePreviewSrc || photo.previewSrc || photo.src}
-                  alt={photo.alt || photo.title || 'Photo'}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-end">
-                  <div className="p-4 w-full">
-                    <h3 className="text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      {photo.title || photo.alt || 'Untitled'}
-                    </h3>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+             {/* Photo grid */}
+       {!loading && filteredPhotos.length > 0 && (
+         <div className="max-w-7xl mx-auto px-4 py-8">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             {filteredPhotos.map((photo) => {
+               const galleryProps = generatePictureProps(photo.src, 'gallery');
+               
+               return (
+                 <div
+                   key={photo.id}
+                   className="group relative aspect-[3/4] overflow-hidden rounded-lg cursor-pointer"
+                   onClick={() => openLightbox(photo)}
+                 >
+                   <picture>
+                     <source
+                       srcSet={galleryProps.srcset}
+                       sizes={galleryProps.sizes}
+                       type="image/webp"
+                     />
+                     <img
+                       src={galleryProps.fallbackUrl}
+                       alt={photo.alt || photo.title || 'Gallery photo'}
+                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                       loading="lazy"
+                       width={galleryProps.width}
+                       height={galleryProps.height}
+                     />
+                   </picture>
+                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-end">
+                     <div className="p-4 w-full">
+                       <h3 className="text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-base">
+                         {photo.title || photo.alt || 'Untitled'}
+                       </h3>
+                     </div>
+                   </div>
+                 </div>
+               );
+             })}
+           </div>
+         </div>
+       )}
 
       {/* Lightbox */}
       {lightboxOpen && selectedPhoto && (
@@ -160,25 +186,40 @@ const Gallery = () => {
               ›
             </button>
             
-            {/* Image */}
-            <img
-              src={selectedPhoto.src}
-              alt={selectedPhoto.alt || selectedPhoto.title || 'Photo'}
-              className="max-w-[90vw] max-h-[90vh] object-contain"
-              style={{
-                maxWidth: 'min(90vw, 90vh * (16/9))',
-                maxHeight: 'min(90vh, 90vw * (9/16))'
-              }}
-            />
+                         {/* Image */}
+             {(() => {
+               const lightboxProps = generatePictureProps(selectedPhoto.src, 'lightbox');
+               
+               return (
+                 <picture>
+                   <source
+                     srcSet={lightboxProps.srcset}
+                     sizes={lightboxProps.sizes}
+                     type="image/webp"
+                   />
+                   <img
+                     src={lightboxProps.fallbackUrl}
+                     alt={selectedPhoto.alt || selectedPhoto.title || 'Lightbox photo'}
+                     className="max-w-[90vw] max-h-[90vh] object-contain"
+                     style={{
+                       maxWidth: 'min(90vw, 90vh * (16/9))',
+                       maxHeight: 'min(90vh, 90vw * (9/16))'
+                     }}
+                     width={lightboxProps.width}
+                     height={lightboxProps.height}
+                   />
+                 </picture>
+               );
+             })()}
             
             {/* Photo info */}
             <div className="absolute bottom-4 left-4 right-4 text-white">
-              <h3 className="text-xl font-semibold mb-2">
-                {selectedPhoto.title || selectedPhoto.alt || 'Untitled'}
-              </h3>
-              {selectedPhoto.description && (
-                <p className="text-gray-300">{selectedPhoto.description}</p>
-              )}
+                           <h3 className="text-xl font-semibold mb-2 text-render-optimized">
+               {selectedPhoto.title || selectedPhoto.alt || 'Untitled'}
+             </h3>
+             {selectedPhoto.description && (
+               <p className="text-gray-300 text-base">{selectedPhoto.description}</p>
+             )}
             </div>
           </div>
         </div>

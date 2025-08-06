@@ -1,20 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { usePhotos } from '../contexts/PhotoContext';
+import { generatePictureProps } from '../utils/imageOptimization';
 
 const Hero = () => {
-  const { photos, loading } = usePhotos();
+  const { photos, loading, categories } = usePhotos();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [heroLoaded, setHeroLoaded] = useState(false);
-  
-  // Lightbox state
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [selectedPhoto, setSelectedPhoto] = useState(null);
   
   // Get hero photos
   const heroPhotos = photos.filter(photo => photo.category === 'hero');
   
-  // Get all non-hero photos for the gallery below
-  const galleryPhotos = photos.filter(photo => photo.category !== 'hero');
+  // Get category previews (most recent photo from each category)
+  const getCategoryPreviews = () => {
+    const previews = [];
+    categories.forEach(category => {
+      const categoryPhotos = photos.filter(photo => photo.category === category);
+      if (categoryPhotos.length > 0) {
+        // Get the most recent photo (first in the array since they're sorted by upload date)
+        previews.push({
+          category,
+          photo: categoryPhotos[0]
+        });
+      }
+    });
+    return previews;
+  };
+  
+  const categoryPreviews = getCategoryPreviews();
   
   useEffect(() => {
     if (heroPhotos.length === 0) return;
@@ -28,45 +40,6 @@ const Hero = () => {
     return () => clearInterval(interval);
   }, [heroPhotos.length]);
   
-  // Mark hero as loaded after a short delay to ensure smooth transition
-  useEffect(() => {
-    if (!loading && heroPhotos.length > 0) {
-      const timer = setTimeout(() => setHeroLoaded(true), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, heroPhotos.length]);
-  
-  // Keyboard navigation for lightbox
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!lightboxOpen) return;
-      
-      if (e.key === 'Escape') {
-        setLightboxOpen(false);
-      } else if (e.key === 'ArrowLeft') {
-        navigatePhoto(-1);
-      } else if (e.key === 'ArrowRight') {
-        navigatePhoto(1);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxOpen, selectedPhoto, galleryPhotos]);
-
-  const openLightbox = (photo) => {
-    setSelectedPhoto(photo);
-    setLightboxOpen(true);
-  };
-
-  const navigatePhoto = (direction) => {
-    if (!selectedPhoto || !galleryPhotos.length) return;
-    
-    const currentIndex = galleryPhotos.findIndex(p => p.id === selectedPhoto.id);
-    const newIndex = (currentIndex + direction + galleryPhotos.length) % galleryPhotos.length;
-    setSelectedPhoto(galleryPhotos[newIndex]);
-  };
-  
   return (
     <div className="bg-black">
       {/* Hero Section */}
@@ -75,36 +48,51 @@ const Hero = () => {
           // Fallback when no hero photos
           <div className="h-full bg-black flex items-center justify-center">
             <div className="text-center">
-              <h1 className="text-3xl md:text-4xl font-light text-white mb-2">
-                Noah Schifman
-              </h1>
+                               <h1 className="text-4xl md:text-5xl lg:text-6xl font-light text-white mb-2 text-render-optimized">
+                   Noah Schifman
+                 </h1>
             </div>
           </div>
         ) : (
           <>
-            {/* Background images with fade transition */}
-            {heroPhotos.map((photo, index) => (
-              <div
-                key={photo.id}
-                className={`absolute inset-0 transition-opacity duration-1000 ${
-                  index === currentImageIndex ? 'opacity-100' : 'opacity-0'
-                }`}
-              >
-                <img
-                  src={photo.src}
-                  alt={photo.alt}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/40"></div>
-              </div>
-            ))}
+                         {/* Background images with fade transition */}
+             {heroPhotos.map((photo, index) => {
+               const heroProps = generatePictureProps(photo.src, 'hero');
+               
+               return (
+                 <div
+                   key={photo.id}
+                   className={`absolute inset-0 transition-opacity duration-1000 ${
+                     index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                   }`}
+                 >
+                   <picture>
+                     <source
+                       srcSet={heroProps.srcset}
+                       sizes={heroProps.sizes}
+                       type="image/webp"
+                     />
+                     <img
+                       src={heroProps.fallbackUrl}
+                       alt={photo.alt || `Hero image ${index + 1}`}
+                       className="w-full h-full object-cover"
+                       fetchPriority={index === 0 ? "high" : "auto"}
+                       loading={index === 0 ? "eager" : "lazy"}
+                       width={heroProps.width}
+                       height={heroProps.height}
+                     />
+                   </picture>
+                   <div className="absolute inset-0 bg-black/40"></div>
+                 </div>
+               );
+             })}
             
             {/* Content overlay */}
             <div className="relative z-10 h-full flex items-center justify-center">
               <div className="text-center">
-                <h1 className="text-3xl md:text-4xl font-light text-white mb-2 drop-shadow-lg">
-                  Noah Schifman
-                </h1>
+                                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-light text-white mb-2 drop-shadow-lg text-render-optimized">
+                   Noah Schifman
+                 </h1>
               </div>
             </div>
             
@@ -127,89 +115,49 @@ const Hero = () => {
         )}
       </div>
       
-      {/* Gallery Section - Load after hero */}
-      {heroLoaded && (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {galleryPhotos.map((photo) => (
-              <div
-                key={photo.id}
-                className="group relative aspect-[3/4] overflow-hidden rounded-lg cursor-pointer"
-                onClick={() => openLightbox(photo)}
-              >
-                <img
-                  src={photo.mobilePreviewSrc || photo.previewSrc || photo.src}
-                  alt={photo.alt || photo.title || 'Photo'}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-end">
-                  <div className="p-4 w-full">
-                    <h3 className="text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      {photo.title || photo.alt || 'Untitled'}
-                    </h3>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Lightbox */}
-      {lightboxOpen && selectedPhoto && (
-        <div
-          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setLightboxOpen(false);
-          }}
-        >
-          <div className="relative max-w-full max-h-full">
-            {/* Close button */}
-            <button
-              className="absolute -top-12 right-0 text-white text-3xl hover:text-gray-300 z-10"
-              onClick={() => setLightboxOpen(false)}
-            >
-              ×
-            </button>
-            
-            {/* Navigation buttons */}
-            <button
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-4xl hover:text-gray-300 z-10"
-              onClick={() => navigatePhoto(-1)}
-            >
-              ‹
-            </button>
-            <button
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-4xl hover:text-gray-300 z-10"
-              onClick={() => navigatePhoto(1)}
-            >
-              ›
-            </button>
-            
-            {/* Image */}
-            <img
-              src={selectedPhoto.src}
-              alt={selectedPhoto.alt || selectedPhoto.title || 'Photo'}
-              className="max-w-[90vw] max-h-[90vh] object-contain"
-              style={{
-                maxWidth: 'min(90vw, 90vh * (16/9))',
-                maxHeight: 'min(90vh, 90vw * (9/16))'
-              }}
-            />
-            
-            {/* Photo info */}
-            <div className="absolute bottom-4 left-4 right-4 text-white">
-              <h3 className="text-xl font-semibold mb-2">
-                {selectedPhoto.title || selectedPhoto.alt || 'Untitled'}
-              </h3>
-              {selectedPhoto.description && (
-                <p className="text-gray-300">{selectedPhoto.description}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+             {/* Category Previews Section */}
+       {!loading && categoryPreviews.length > 0 && (
+         <div className="max-w-7xl mx-auto px-4 py-12">
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {categoryPreviews.map(({ category, photo }) => {
+               const categoryProps = generatePictureProps(photo.src, 'category');
+               
+               return (
+                 <Link
+                   key={category}
+                   to={`/category/${category}`}
+                   className="group relative aspect-[4/3] overflow-hidden rounded-lg cursor-pointer block"
+                 >
+                   <picture>
+                     <source
+                       srcSet={categoryProps.srcset}
+                       sizes={categoryProps.sizes}
+                       type="image/webp"
+                     />
+                     <img
+                       src={categoryProps.fallbackUrl}
+                       alt={photo.alt || photo.title || `${category} category preview`}
+                       className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
+                       loading="lazy"
+                       width={categoryProps.width}
+                       height={categoryProps.height}
+                     />
+                   </picture>
+                   {/* Overlay with opacity/grey effect */}
+                   <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-300"></div>
+                   
+                   {/* Category name */}
+                   <div className="absolute inset-0 flex items-center justify-center">
+                     <h2 className="text-2xl md:text-3xl lg:text-4xl font-medium text-white drop-shadow-lg text-center px-4 text-render-optimized">
+                       {category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}
+                     </h2>
+                   </div>
+                 </Link>
+               );
+             })}
+           </div>
+         </div>
+       )}
     </div>
   );
 };

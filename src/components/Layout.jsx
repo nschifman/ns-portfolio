@@ -1,27 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { usePhotos } from '../contexts/PhotoContext';
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Layout = ({ children }) => {
-  const location = useLocation();
-  const { categories } = usePhotos();
   const currentYear = new Date().getFullYear();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
   
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -40,47 +21,6 @@ const Layout = ({ children }) => {
                   <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                 </svg>
               </Link>
-            </div>
-            
-            {/* Center - Categories Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white transition-colors flex items-center gap-2"
-              >
-                <span>Categories</span>
-                <svg className={`w-4 h-4 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-              
-              {dropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-50">
-                  <div className="py-2">
-                    <Link
-                      to="/gallery"
-                      className={`block px-4 py-2 text-sm hover:bg-gray-700 transition-colors ${
-                        location.pathname === '/gallery' ? 'text-blue-400' : 'text-gray-300'
-                      }`}
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      All Photos
-                    </Link>
-                    {categories.map(cat => (
-                      <Link
-                        key={cat}
-                        to={`/category/${cat}`}
-                        className={`block px-4 py-2 text-sm hover:bg-gray-700 transition-colors ${
-                          location.pathname === `/category/${cat}` ? 'text-blue-400' : 'text-gray-300'
-                        }`}
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        {cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase()}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
             
             {/* Right side - Instagram */}
@@ -109,9 +49,9 @@ const Layout = ({ children }) => {
       {/* Footer */}
       <footer className="bg-black border-t border-gray-800 py-4">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-gray-400 text-sm">
-            © {currentYear} Noah Schifman. All rights reserved.
-          </p>
+                           <p className="text-gray-400 text-base text-render-optimized">
+                   © {currentYear} Noah Schifman. All rights reserved.
+                 </p>
         </div>
       </footer>
     </div>
