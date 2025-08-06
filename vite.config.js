@@ -54,5 +54,7 @@ export default defineConfig({
   },
   define: {
     'process.env.NODE_ENV': '"production"'
-  }
+  },
+  // Copy .nojekyll file to build output
+  publicDir: 'public'
 }) 
