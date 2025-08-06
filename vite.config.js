@@ -5,6 +5,7 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/ns-portfolio/', // GitHub Pages base path
   server: {
     port: 3000,
     host: true
@@ -22,7 +23,7 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
-    target: 'es2015',
+    target: 'esnext',
     minify: 'esbuild',
     chunkSizeWarningLimit: 1000,
     // Optimize build performance
@@ -36,9 +37,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      'react': path.resolve(__dirname, 'node_modules/react'),
-      'react-dom': path.resolve(__dirname, 'node_modules/react-dom')
+      '@': path.resolve(__dirname, './src')
     }
   },
   optimizeDeps: {
