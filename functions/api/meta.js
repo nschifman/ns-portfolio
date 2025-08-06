@@ -2,12 +2,14 @@ import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
 
 // Initialize S3 client for R2
 const createS3Client = (context) => {
-  // R2 Configuration - Use environment variables in production
-  const R2_ACCOUNT_ID = context.env.R2_ACCOUNT_ID || '7afaf04ebcdccfd4fffc24938a03466d';
-  const R2_ACCESS_KEY_ID = context.env.R2_ACCESS_KEY_ID || 'a01231f57659a44c10591c815bb94fae';
-  const R2_SECRET_ACCESS_KEY = context.env.R2_SECRET_ACCESS_KEY || '8097c355c39c04be371378ce732c4c352d39a63757de580ef5e6d7f441c63482';
+  const R2_ACCOUNT_ID = context.env.R2_ACCOUNT_ID;
+  const R2_ACCESS_KEY_ID = context.env.R2_ACCESS_KEY_ID;
+  const R2_SECRET_ACCESS_KEY = context.env.R2_SECRET_ACCESS_KEY;
   const R2_BUCKET_NAME = context.env.R2_BUCKET_NAME || 'ns-portfolio-photos';
-  const CURRENT_DOMAIN = context.env.CURRENT_DOMAIN || 'noahschifman.com';
+
+  if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
+    throw new Error('R2 credentials not configured');
+  }
 
   return {
     s3Client: new S3Client({
@@ -18,8 +20,7 @@ const createS3Client = (context) => {
         secretAccessKey: R2_SECRET_ACCESS_KEY,
       },
     }),
-    R2_BUCKET_NAME,
-    CURRENT_DOMAIN
+    R2_BUCKET_NAME
   };
 };
 
@@ -60,14 +61,14 @@ const findR2Images = async (s3Client, R2_BUCKET_NAME) => {
 
     return imageFiles;
   } catch (error) {
-    console.error('❌ Error scanning R2 bucket:', error);
+    console.error('Error scanning R2 bucket:', error);
     return [];
   }
 };
 
 export async function onRequest(context) {
   try {
-    const { s3Client, R2_BUCKET_NAME, CURRENT_DOMAIN } = createS3Client(context);
+    const { s3Client, R2_BUCKET_NAME } = createS3Client(context);
     const imageFiles = await findR2Images(s3Client, R2_BUCKET_NAME);
     
     if (imageFiles.length === 0) {
@@ -130,7 +131,7 @@ export async function onRequest(context) {
     });
 
   } catch (error) {
-    console.error('❌ Error generating meta data:', error);
+    console.error('Error generating meta data:', error);
     return new Response(JSON.stringify({
       error: 'Failed to generate meta data',
       generated: new Date().toISOString()

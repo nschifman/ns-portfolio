@@ -1,70 +1,18 @@
-import React, { lazy, useEffect, Suspense } from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { PhotoProvider } from './contexts/PhotoContext';
-import DynamicMeta from './components/DynamicMeta';
-
-// Lazy load the Gallery component for better performance
-const Gallery = lazy(() => import('./components/Gallery'));
-
-// Security wrapper to prevent right-click, drag, and keyboard shortcuts
-const SecurityWrapper = ({ children }) => {
-  useEffect(() => {
-    const preventDefault = (e) => {
-      e.preventDefault();
-      return false;
-    };
-
-    // Prevent right-click
-    document.addEventListener('contextmenu', preventDefault);
-    
-    // Prevent drag and drop
-    document.addEventListener('dragstart', preventDefault);
-    document.addEventListener('drop', preventDefault);
-    
-    // Prevent keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-      // Prevent Ctrl+S, Ctrl+U, F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
-      if (
-        (e.ctrlKey && (e.key === 's' || e.key === 'u')) ||
-        e.key === 'F12' ||
-        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C'))
-      ) {
-        preventDefault(e);
-      }
-    });
-
-    return () => {
-      document.removeEventListener('contextmenu', preventDefault);
-      document.removeEventListener('dragstart', preventDefault);
-      document.removeEventListener('drop', preventDefault);
-    };
-  }, []);
-
-  return <div className="select-none">{children}</div>;
-};
+import Gallery from './components/Gallery';
 
 function App() {
   return (
-    <SecurityWrapper>
-      <PhotoProvider>
-        <Router>
-          <DynamicMeta />
-          <Suspense fallback={
-            <div className="min-h-screen bg-black flex items-center justify-center">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-                <p className="text-gray-400 text-lg">Loading...</p>
-              </div>
-            </div>
-          }>
-            <Routes>
-              <Route path="/" element={<Gallery />} />
-              <Route path="/:category" element={<Gallery />} />
-            </Routes>
-          </Suspense>
-        </Router>
-      </PhotoProvider>
-    </SecurityWrapper>
+    <PhotoProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Gallery />} />
+          <Route path="/category/:category" element={<Gallery />} />
+        </Routes>
+      </Router>
+    </PhotoProvider>
   );
 }
 
