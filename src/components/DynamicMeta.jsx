@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import * as React from 'react';
 
 const DynamicMeta = () => {
-  useEffect(() => {
+  React.useEffect(() => {
     const updateMetaTags = async () => {
       try {
         const response = await fetch('/api/meta');
