@@ -6,11 +6,9 @@ import path from 'path'
 export default defineConfig({
   plugins: [
     react({
-      jsxRuntime: 'automatic',
-      jsxImportSource: 'react'
+      jsxRuntime: 'automatic'
     })
   ],
-  base: '/ns-portfolio/', // GitHub Pages base path
   server: {
     port: 3000,
     host: true

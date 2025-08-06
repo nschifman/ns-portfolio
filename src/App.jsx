@@ -1,14 +1,14 @@
-import * as React from 'react';
+import React, { lazy, useEffect, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { PhotoProvider } from './contexts/PhotoContext';
 import DynamicMeta from './components/DynamicMeta';
 
 // Lazy load the Gallery component for better performance
-const Gallery = React.lazy(() => import('./components/Gallery'));
+const Gallery = lazy(() => import('./components/Gallery'));
 
 // Security wrapper to prevent right-click, drag, and keyboard shortcuts
 const SecurityWrapper = ({ children }) => {
-  React.useEffect(() => {
+  useEffect(() => {
     const preventDefault = (e) => {
       e.preventDefault();
       return false;
@@ -40,33 +40,31 @@ const SecurityWrapper = ({ children }) => {
     };
   }, []);
 
-  return React.createElement('div', { className: 'select-none' }, children);
+  return <div className="select-none">{children}</div>;
 };
 
 function App() {
-  return React.createElement(SecurityWrapper, null,
-    React.createElement(PhotoProvider, null,
-      React.createElement(Router, null,
-        React.createElement(DynamicMeta),
-        React.createElement(React.Suspense, {
-          fallback: React.createElement('div', {
-            className: 'min-h-screen bg-black flex items-center justify-center'
-          },
-            React.createElement('div', { className: 'text-center' },
-              React.createElement('div', {
-                className: 'animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4'
-              }),
-              React.createElement('p', { className: 'text-gray-400 text-lg' }, 'Loading...')
-            )
-          )
-        },
-          React.createElement(Routes, null,
-            React.createElement(Route, { path: '/', element: React.createElement(Gallery) }),
-            React.createElement(Route, { path: '/:category', element: React.createElement(Gallery) })
-          )
-        )
-      )
-    )
+  return (
+    <SecurityWrapper>
+      <PhotoProvider>
+        <Router>
+          <DynamicMeta />
+          <Suspense fallback={
+            <div className="min-h-screen bg-black flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                <p className="text-gray-400 text-lg">Loading...</p>
+              </div>
+            </div>
+          }>
+            <Routes>
+              <Route path="/" element={<Gallery />} />
+              <Route path="/:category" element={<Gallery />} />
+            </Routes>
+          </Suspense>
+        </Router>
+      </PhotoProvider>
+    </SecurityWrapper>
   );
 }
 
