@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 
-const PhotoContext = createContext();
+const PhotoContext = React.createContext();
 
 export const usePhotos = () => {
-  const context = useContext(PhotoContext);
+  const context = React.useContext(PhotoContext);
   if (context === undefined) {
     throw new Error('usePhotos must be used within a PhotoProvider');
   }
@@ -12,14 +11,14 @@ export const usePhotos = () => {
 };
 
 export const PhotoProvider = ({ children }) => {
-  const [photos, setPhotos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [lastFetch, setLastFetch] = useState(0);
+  const [photos, setPhotos] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [lastFetch, setLastFetch] = React.useState(0);
   const cacheTimeout = 5 * 60 * 1000; // 5 minutes
 
   // Simplified sorting - just by date
-  const sortPhotos = useCallback((photoList) => {
+  const sortPhotos = React.useCallback((photoList) => {
     if (!photoList || photoList.length === 0) return photoList;
     
     return photoList.sort((a, b) => {
@@ -29,7 +28,7 @@ export const PhotoProvider = ({ children }) => {
     });
   }, []);
 
-  const loadPhotos = useCallback(async (forceRefresh = false) => {
+  const loadPhotos = React.useCallback(async (forceRefresh = false) => {
     try {
       // Check cache
       const now = Date.now();
@@ -97,12 +96,12 @@ export const PhotoProvider = ({ children }) => {
     }
   }, [photos.length, lastFetch, cacheTimeout, sortPhotos]);
 
-  const refreshPhotos = useCallback(() => {
+  const refreshPhotos = React.useCallback(() => {
     loadPhotos(true);
   }, [loadPhotos]);
 
   // Optimized categories computation
-  const categories = useMemo(() => {
+  const categories = React.useMemo(() => {
     const categorySet = new Set();
     photos.forEach(photo => {
       if (photo.category) {
@@ -113,20 +112,20 @@ export const PhotoProvider = ({ children }) => {
   }, [photos]);
 
   // Optimized photo filtering functions
-  const getPhotosByCategory = useCallback((category) => {
+  const getPhotosByCategory = React.useCallback((category) => {
     return photos.filter(photo => photo.category === category);
   }, [photos]);
 
-  const getAllPhotos = useCallback(() => {
+  const getAllPhotos = React.useCallback(() => {
     return photos;
   }, [photos]);
 
   // Load photos on mount
-  useEffect(() => {
+  React.useEffect(() => {
     loadPhotos();
   }, [loadPhotos]);
 
-  const value = useMemo(() => ({
+  const value = React.useMemo(() => ({
     photos,
     loading,
     error,
