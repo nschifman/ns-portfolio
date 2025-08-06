@@ -7,6 +7,9 @@ const Hero = () => {
   const { photos, loading, categories } = usePhotos();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
+  // Photo loading state for fade-in effect
+  const [loadedPhotos, setLoadedPhotos] = useState(new Set());
+  
   // Get hero photos - use first 3 photos from any category
   const heroPhotos = photos.slice(0, 3);
   
@@ -42,6 +45,10 @@ const Hero = () => {
     
     return () => clearInterval(interval);
   }, [heroPhotos.length]);
+
+  const handlePhotoLoad = (photoId) => {
+    setLoadedPhotos(prev => new Set([...prev, photoId]));
+  };
   
   return (
     <div className="bg-black">
@@ -126,26 +133,29 @@ const Hero = () => {
                const categoryProps = generatePictureProps(photo.src, 'category');
                
                return (
-                 <Link
-                   key={category}
-                   to={`/category/${category}`}
-                   className="group relative aspect-[4/3] overflow-hidden rounded-lg cursor-pointer block"
-                 >
-                   <picture>
-                     <source
-                       srcSet={categoryProps.srcset}
-                       sizes={categoryProps.sizes}
-                       type="image/webp"
-                     />
-                     <img
-                       src={categoryProps.fallbackUrl}
-                       alt={photo.alt || photo.title || `${category} category preview`}
-                       className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
-                       loading="lazy"
-                       width={categoryProps.width}
-                       height={categoryProps.height}
-                     />
-                   </picture>
+                                   <Link
+                    key={category}
+                    to={`/category/${category}`}
+                    className={`group relative aspect-[4/3] overflow-hidden rounded-lg cursor-pointer block ${
+                      loadedPhotos.has(photo.id) ? 'photo-fade-in' : 'opacity-0'
+                    }`}
+                  >
+                    <picture>
+                      <source
+                        srcSet={categoryProps.srcset}
+                        sizes={categoryProps.sizes}
+                        type="image/webp"
+                      />
+                      <img
+                        src={categoryProps.fallbackUrl}
+                        alt={photo.alt || photo.title || `${category} category preview`}
+                        className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
+                        loading="lazy"
+                        width={categoryProps.width}
+                        height={categoryProps.height}
+                        onLoad={() => handlePhotoLoad(photo.id)}
+                      />
+                    </picture>
                    {/* Overlay with opacity/grey effect */}
                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-300"></div>
                    

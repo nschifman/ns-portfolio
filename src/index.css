@@ -88,14 +88,31 @@
     animation: loading 1.5s infinite;
   }
   
-  @keyframes loading {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
-  }
+           @keyframes loading {
+           0% {
+             background-position: 200% 0;
+           }
+           100% {
+             background-position: -200% 0;
+           }
+         }
+
+         /* Photo fade-in animation */
+         .photo-fade-in {
+           opacity: 0;
+           animation: fadeIn 0.6s ease-out forwards;
+         }
+
+         @keyframes fadeIn {
+           from {
+             opacity: 0;
+             transform: translateY(10px);
+           }
+           to {
+             opacity: 1;
+             transform: translateY(0);
+           }
+         }
 }
 
 @layer utilities {
@@ -121,18 +138,19 @@
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.25);
 }

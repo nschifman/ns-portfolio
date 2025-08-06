@@ -16,6 +16,9 @@ const Gallery = () => {
   // Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  
+  // Photo loading state for fade-in effect
+  const [loadedPhotos, setLoadedPhotos] = useState(new Set());
 
   // Keyboard navigation for lightbox
   useEffect(() => {
@@ -46,6 +49,10 @@ const Gallery = () => {
     const currentIndex = filteredPhotos.findIndex(p => p.id === selectedPhoto.id);
     const newIndex = (currentIndex + direction + filteredPhotos.length) % filteredPhotos.length;
     setSelectedPhoto(filteredPhotos[newIndex]);
+  };
+
+  const handlePhotoLoad = (photoId) => {
+    setLoadedPhotos(prev => new Set([...prev, photoId]));
   };
 
   // Error state
@@ -108,26 +115,29 @@ const Gallery = () => {
                const galleryProps = generatePictureProps(photo.src, 'gallery');
                
                return (
-                 <div
-                   key={photo.id}
-                   className="group relative aspect-[3/4] overflow-hidden rounded-lg cursor-pointer"
-                   onClick={() => openLightbox(photo)}
-                 >
-                   <picture>
-                     <source
-                       srcSet={galleryProps.srcset}
-                       sizes={galleryProps.sizes}
-                       type="image/webp"
-                     />
-                     <img
-                       src={galleryProps.fallbackUrl}
-                       alt={photo.alt || photo.title || 'Gallery photo'}
-                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                       loading="lazy"
-                       width={galleryProps.width}
-                       height={galleryProps.height}
-                     />
-                   </picture>
+                                   <div
+                    key={photo.id}
+                    className={`group relative aspect-[3/4] overflow-hidden rounded-lg cursor-pointer ${
+                      loadedPhotos.has(photo.id) ? 'photo-fade-in' : 'opacity-0'
+                    }`}
+                    onClick={() => openLightbox(photo)}
+                  >
+                    <picture>
+                      <source
+                        srcSet={galleryProps.srcset}
+                        sizes={galleryProps.sizes}
+                        type="image/webp"
+                      />
+                      <img
+                        src={galleryProps.fallbackUrl}
+                        alt={photo.alt || photo.title || 'Gallery photo'}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                        width={galleryProps.width}
+                        height={galleryProps.height}
+                        onLoad={() => handlePhotoLoad(photo.id)}
+                      />
+                    </picture>
                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-end">
                      <div className="p-4 w-full">
                        {/* Removed title display to avoid showing filenames */}
