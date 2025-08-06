@@ -7,14 +7,10 @@ const Layout = ({ children }) => {
   const { categories } = usePhotos();
   const currentYear = new Date().getFullYear();
   
-  // Don't show navigation on hero page (home page)
-  const isHeroPage = location.pathname === '/';
-  
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* Navigation */}
-      {!isHeroPage && (
-        <nav className="sticky top-0 z-40 bg-black/80 backdrop-blur-sm border-b border-gray-800">
+      <nav className="sticky top-0 z-40 bg-black/80 backdrop-blur-sm border-b border-gray-800">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               {/* Left side - Name */}
@@ -74,7 +70,6 @@ const Layout = ({ children }) => {
             </div>
           </div>
         </nav>
-      )}
       
       {/* Main content */}
       <main className="flex-1">
