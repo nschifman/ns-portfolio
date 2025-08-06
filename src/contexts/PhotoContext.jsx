@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import * as React from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 
 const PhotoContext = createContext();
 
@@ -100,62 +101,41 @@ export const PhotoProvider = ({ children }) => {
     loadPhotos(true);
   }, [loadPhotos]);
 
+  // Optimized categories computation
+  const categories = useMemo(() => {
+    const categorySet = new Set();
+    photos.forEach(photo => {
+      if (photo.category) {
+        categorySet.add(photo.category);
+      }
+    });
+    return Array.from(categorySet).sort();
+  }, [photos]);
+
+  // Optimized photo filtering functions
+  const getPhotosByCategory = useCallback((category) => {
+    return photos.filter(photo => photo.category === category);
+  }, [photos]);
+
+  const getAllPhotos = useCallback(() => {
+    return photos;
+  }, [photos]);
+
+  // Load photos on mount
   useEffect(() => {
     loadPhotos();
   }, [loadPhotos]);
 
-  // Optimized categories computation
-  const categories = useMemo(() => {
-    if (photos.length === 0) return [];
-    
-    const uniqueCategories = [...new Set(photos.map(photo => 
-      photo.folder || photo.category
-    ))];
-    
-    return uniqueCategories
-      .filter(category => category !== 'hero' && category !== 'Hero')
-      .sort((a, b) => {
-        const aCount = photos.filter(photo => 
-          (photo.folder || photo.category) === a
-        ).length;
-        
-        const bCount = photos.filter(photo => 
-          (photo.folder || photo.category) === b
-        ).length;
-        
-        return bCount - aCount;
-      });
-  }, [photos]);
-
-  // Optimized photo filtering
-  const getPhotosByCategory = useCallback((category) => {
-    if (!category || photos.length === 0) return [];
-    
-    return photos.filter(photo => {
-      const photoCategory = photo.folder || photo.category;
-      return photoCategory === category;
-    });
-  }, [photos]);
-
-  const getAllPhotos = useCallback(() => {
-    if (photos.length === 0) return [];
-    
-    return photos.filter(photo => {
-      const photoCategory = photo.folder || photo.category;
-      return photoCategory !== 'hero' && photoCategory !== 'Hero';
-    });
-  }, [photos]);
-
-  // Memoized context value
   const value = useMemo(() => ({
     photos,
-    categories,
     loading,
     error,
+    categories,
     getPhotosByCategory,
     getAllPhotos,
-    refreshPhotos
-  }), [photos, categories, loading, error, getPhotosByCategory, getAllPhotos, refreshPhotos]);
+    refreshPhotos,
+    loadPhotos
+  }), [photos, loading, error, categories, getPhotosByCategory, getAllPhotos, refreshPhotos, loadPhotos]);
 
   return (
     <PhotoContext.Provider value={value}>
