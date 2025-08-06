@@ -112,7 +112,9 @@ export async function onRequest(context) {
       
       // Extract category from folder path
       const pathParts = cleanPath.split('/');
-      const category = pathParts.length > 1 ? pathParts[0] : 'uncategorized';
+      const rawCategory = pathParts.length > 1 ? pathParts[0] : 'uncategorized';
+      // Capitalize category name
+      const category = rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase();
       
       // Build photo URLs with responsive variants
       const src = `${R2_BUCKET_URL}/${cleanPath}`;

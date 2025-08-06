@@ -52,7 +52,7 @@ const Layout = ({ children }) => {
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
                     }`}
                   >
-                    {cat}
+                    {cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase()}
                   </Link>
                 ))}
               </div>

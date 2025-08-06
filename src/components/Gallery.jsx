@@ -72,7 +72,7 @@ const Gallery = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">No Photos Found</h2>
           <p className="text-gray-400 mb-4">
-            {category ? `No photos in the "${category}" category.` : 'No photos available.'}
+            {category ? `No photos in the "${category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}" category.` : 'No photos available.'}
           </p>
           {category && (
             <Link 
