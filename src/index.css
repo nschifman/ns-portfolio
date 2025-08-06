@@ -17,7 +17,6 @@
   
   img {
     image-rendering: auto;
-    image-rendering: -webkit-auto;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -35,13 +34,10 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
     -webkit-overflow-scrolling: touch;
-    overflow-y: scroll;
   }
 
   * {
     box-sizing: border-box;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -53,14 +49,13 @@
     width: 100%;
   }
 
-  /* Photo grid - responsive masonry layout */
+  /* Optimized photo grid - CSS Grid with auto-fit */
   .photo-grid {
     display: grid;
     gap: 0.5rem;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     overflow-x: hidden;
     max-width: 100%;
-    transition: opacity 0.2s ease-in-out;
   }
 
   /* Responsive photo grid breakpoints */
@@ -74,28 +69,21 @@
   @media (min-width: 641px) and (max-width: 1023px) {
     .photo-grid {
       gap: 0.75rem;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     }
   }
 
   @media (min-width: 1024px) and (max-width: 1439px) {
     .photo-grid {
       gap: 1rem;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
   }
 
-  @media (min-width: 1440px) and (max-width: 1919px) {
+  @media (min-width: 1440px) {
     .photo-grid {
       gap: 1.25rem;
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-
-  @media (min-width: 1920px) {
-    .photo-grid {
-      gap: 1.5rem;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     }
   }
 
@@ -104,25 +92,17 @@
     @apply relative overflow-hidden rounded-lg cursor-pointer;
     display: block;
     width: 100%;
+    aspect-ratio: 3/4;
     contain: layout style paint;
-    will-change: opacity;
-    aspect-ratio: auto;
-  }
-
-  @media (max-width: 640px) {
-    .photo-item {
-      border-radius: 0.5rem;
-    }
   }
 
   .photo-item img,
   .photo-item picture {
     @apply w-full h-full object-cover;
     display: block;
-    aspect-ratio: auto;
+    aspect-ratio: 3/4;
     max-width: 100%;
     height: auto;
-    image-rendering: auto;
   }
 
   .photo-item picture {
@@ -130,11 +110,10 @@
     height: 100%;
   }
 
-  /* Photo animations */
+  /* Simplified photo animations */
   .photo-fade-in {
     opacity: 0;
-    transition: opacity 0.5s ease-out;
-    will-change: opacity;
+    transition: opacity 0.3s ease-out;
   }
 
   .photo-fade-in.photo-loaded {
@@ -143,34 +122,24 @@
 
   .photo-overlay {
     @apply absolute inset-0 bg-black/0 flex items-center justify-center;
+    transition: background-color 0.2s ease-out;
   }
 
   /* Lightbox */
   .lightbox {
-    @apply fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-2;
+    @apply fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4;
   }
 
   .lightbox-image {
-    @apply max-w-[calc(100vw-1rem)] max-h-[calc(100vh-1rem)] w-auto h-auto object-contain;
+    @apply max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] w-auto h-auto object-contain;
     image-rendering: auto !important;
-    image-rendering: -webkit-auto !important;
-    -webkit-image-rendering: auto !important;
-    -moz-image-rendering: auto !important;
-    -o-image-rendering: auto !important;
-    -ms-image-rendering: auto !important;
-    image-smoothing: auto !important;
-    -webkit-image-smoothing: auto !important;
-    -moz-image-smoothing: auto !important;
-    -o-image-smoothing: auto !important;
-    -ms-image-smoothing: auto !important;
     transform: translateZ(0);
     backface-visibility: hidden;
-    perspective: 1000px;
   }
 
   /* Navigation buttons */
   .nav-button {
-    @apply px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-sm;
+    @apply px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-sm transition-colors duration-200;
   }
 
   .nav-button-active {
@@ -183,7 +152,7 @@
 
   @media (max-width: 768px) {
     .nav-button {
-      @apply px-2 py-1 text-xs;
+      @apply px-3 py-2 text-sm;
     }
     
     .mobile-menu-container {
@@ -194,7 +163,7 @@
 
   @media (max-width: 640px) {
     .nav-button {
-      @apply px-1 py-1 text-xs;
+      @apply px-2 py-1 text-xs;
     }
   }
 
@@ -226,7 +195,7 @@
     object-position: center;
   }
 
-  /* Transitions */
+  /* Category title */
   .category-title {
     transition: opacity 0.2s ease-in-out;
   }
@@ -254,10 +223,18 @@
 
 /* Mobile optimizations */
 @media (max-width: 640px) {
+  /* Mobile navigation improvements */
   .nav-button {
     @apply px-3 py-2 text-sm;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
   }
 
+  /* Mobile lightbox improvements */
   .lightbox {
     @apply p-2;
   }
@@ -266,6 +243,7 @@
     @apply max-w-[calc(100vw-1rem)] max-h-[calc(100vh-1rem)];
   }
 
+  /* Mobile layout fixes */
   body, main, nav, .hero-container {
     overflow-x: hidden !important;
     max-width: 100vw !important;
@@ -277,12 +255,159 @@
     padding-right: 1rem !important;
   }
 
-  /* Ensure mobile dropdown appears above hero */
+  /* Mobile dropdown positioning */
   .mobile-menu-container {
     z-index: 50 !important;
   }
 
   .mobile-menu-container .absolute {
     z-index: 60 !important;
+  }
+
+  /* Mobile photo grid optimizations */
+  .photo-grid {
+    gap: 0.5rem !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .photo-item {
+    min-height: 200px;
+    aspect-ratio: 4/5;
+    border-radius: 0.75rem;
+  }
+
+  .photo-item img,
+  .photo-item picture {
+    aspect-ratio: 4/5;
+  }
+
+  /* Mobile touch improvements */
+  .photo-item {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .photo-overlay {
+    touch-action: manipulation;
+  }
+
+  /* Mobile navigation height */
+  nav {
+    height: 60px !important;
+  }
+
+  nav > div > div {
+    height: 60px !important;
+  }
+
+  /* Mobile hero text sizing */
+  .hero-container h1 {
+    font-size: 2rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .hero-container p {
+    font-size: 1rem !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Mobile category title */
+  .category-title h2 {
+    font-size: 1.5rem !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Mobile footer */
+  footer {
+    padding: 1.5rem 1rem !important;
+  }
+
+  /* Mobile dropdown menu improvements */
+  .mobile-menu-container .absolute {
+    right: 0 !important;
+    left: auto !important;
+    transform: none !important;
+    margin-top: 0.5rem !important;
+    width: 200px !important;
+  }
+
+  .mobile-menu-container .absolute a {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Mobile performance optimizations */
+  .photo-fade-in {
+    transition: opacity 0.2s ease-out !important;
+  }
+
+  .photo-overlay {
+    transition: background-color 0.15s ease-out !important;
+  }
+
+  /* Mobile scroll improvements */
+  html {
+    scroll-padding-top: 60px;
+  }
+
+  /* Mobile safe area support */
+  @supports (padding: max(0px)) {
+    body {
+      padding-left: max(1rem, env(safe-area-inset-left));
+      padding-right: max(1rem, env(safe-area-inset-right));
+    }
+    
+    .hero-container {
+      padding-left: max(0px, env(safe-area-inset-left));
+      padding-right: max(0px, env(safe-area-inset-right));
+    }
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .photo-grid {
+    gap: 0.75rem !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .photo-item {
+    aspect-ratio: 3/4;
+  }
+
+  .photo-item img,
+  .photo-item picture {
+    aspect-ratio: 3/4;
+  }
+
+  nav {
+    height: 64px !important;
+  }
+
+  nav > div > div {
+    height: 64px !important;
+  }
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .photo-item img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .photo-fade-in,
+  .photo-overlay,
+  .nav-button,
+  .lightbox-image {
+    transition: none !important;
+  }
+  
+  .mobile-menu-container svg {
+    transition: none !important;
   }
 }

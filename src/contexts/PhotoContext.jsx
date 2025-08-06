@@ -15,24 +15,22 @@ export const PhotoProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastFetch, setLastFetch] = useState(0);
-  const cacheTimeout = 5 * 60 * 1000; // 5 minutes in ms
+  const cacheTimeout = 5 * 60 * 1000; // 5 minutes
 
-  // Memoized sorting algorithm: prioritize recency (most recently added last - at bottom)
+  // Simplified sorting - just by date
   const sortPhotos = useCallback((photoList) => {
     if (!photoList || photoList.length === 0) return photoList;
     
     return photoList.sort((a, b) => {
-      // Sort by upload/creation date - most recent last (at bottom)
       const aDate = new Date(a.uploadedAt || a.createdAt || 0);
       const bDate = new Date(b.uploadedAt || b.createdAt || 0);
-      
-      return aDate - bDate; // Oldest first, newest at bottom
+      return aDate - bDate;
     });
   }, []);
 
   const loadPhotos = useCallback(async (forceRefresh = false) => {
     try {
-      // Check if we should use cached data
+      // Check cache
       const now = Date.now();
       const shouldUseCache = !forceRefresh && 
         photos.length > 0 && 
@@ -45,29 +43,23 @@ export const PhotoProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      // Load photo manifest from dynamic API with optimized timeout
+      // Optimized fetch with shorter timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased timeout for mobile
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
       
       const url = forceRefresh ? '/api/manifest?refresh=true' : '/api/manifest';
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
-          'Cache-Control': forceRefresh ? 'no-cache' : 'max-age=300', // 5 minute cache
-          'Accept': 'application/json',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'User-Agent': 'Mozilla/5.0 (compatible; Portfolio-App/1.0)',
-          'Connection': 'keep-alive'
-        },
-        mode: 'cors',
-        credentials: 'same-origin'
+          'Cache-Control': forceRefresh ? 'no-cache' : 'max-age=300',
+          'Accept': 'application/json'
+        }
       });
       
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        throw new Error(`Failed to load manifest: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to load manifest: ${response.status}`);
       }
       
       const manifest = await response.json();
@@ -78,15 +70,12 @@ export const PhotoProvider = ({ children }) => {
         return;
       }
       
-      // Process photos for better mobile performance
+      // Simplified photo processing
       const processedPhotos = manifest.photos.map(photo => ({
         ...photo,
-        // Ensure we have fallback image sources for mobile
         mobilePreviewSrc: photo.mobilePreviewSrc || photo.previewSrc || photo.src,
         tabletPreviewSrc: photo.tabletPreviewSrc || photo.previewSrc || photo.src,
-        desktopPreviewSrc: photo.desktopPreviewSrc || photo.previewSrc || photo.src,
-        // Add loading priority for hero images
-        loadingPriority: photo.folder === 'hero' ? 'high' : 'low'
+        desktopPreviewSrc: photo.desktopPreviewSrc || photo.previewSrc || photo.src
       }));
       
       const sortedPhotos = sortPhotos(processedPhotos);
@@ -96,12 +85,8 @@ export const PhotoProvider = ({ children }) => {
       console.error('Error loading photos:', err);
       if (err.name === 'AbortError') {
         setError('Request timed out. Please check your connection and try again.');
-      } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+      } else if (err.message.includes('Failed to fetch')) {
         setError('Network error. Please check your connection and try again.');
-      } else if (err.message.includes('404')) {
-        setError('Photos not found. Please check back later.');
-      } else if (err.message.includes('500')) {
-        setError('Server error. Please try again in a few moments.');
       } else {
         setError('Failed to load photos. Please try refreshing the page.');
       }
@@ -119,47 +104,34 @@ export const PhotoProvider = ({ children }) => {
     loadPhotos();
   }, [loadPhotos]);
 
-  // Memoized categories computation
+  // Optimized categories computation
   const categories = useMemo(() => {
     if (photos.length === 0) return [];
     
-    // Extract categories from photo paths/folders, excluding 'hero'
-    const uniqueCategories = [...new Set(photos.map(photo => {
-      // If photo has a folder path, extract category from it
-      if (photo.folder) {
-        return photo.folder;
-      }
-      // Fallback to category field
-      return photo.category;
-    }))];
+    const uniqueCategories = [...new Set(photos.map(photo => 
+      photo.folder || photo.category
+    ))];
     
-    // Filter out 'hero' folder - it's not a category
-    const filteredCategories = uniqueCategories.filter(category => 
-      category !== 'hero' && category !== 'Hero'
-    );
-    
-    // Sort categories by number of photos (descending)
-    return filteredCategories.sort((a, b) => {
-      const aCount = photos.filter(photo => {
-        const photoCategory = photo.folder || photo.category;
-        return photoCategory === a;
-      }).length;
-      
-      const bCount = photos.filter(photo => {
-        const photoCategory = photo.folder || photo.category;
-        return photoCategory === b;
-      }).length;
-      
-      return bCount - aCount; // Descending order (most photos first)
-    });
+    return uniqueCategories
+      .filter(category => category !== 'hero' && category !== 'Hero')
+      .sort((a, b) => {
+        const aCount = photos.filter(photo => 
+          (photo.folder || photo.category) === a
+        ).length;
+        
+        const bCount = photos.filter(photo => 
+          (photo.folder || photo.category) === b
+        ).length;
+        
+        return bCount - aCount;
+      });
   }, [photos]);
 
-  // Memoized photo filtering functions
+  // Optimized photo filtering
   const getPhotosByCategory = useCallback((category) => {
     if (!category || photos.length === 0) return [];
     
     return photos.filter(photo => {
-      // Check folder first, then category field
       const photoCategory = photo.folder || photo.category;
       return photoCategory === category;
     });
@@ -168,14 +140,13 @@ export const PhotoProvider = ({ children }) => {
   const getAllPhotos = useCallback(() => {
     if (photos.length === 0) return [];
     
-    // Exclude hero photos from the main gallery
     return photos.filter(photo => {
       const photoCategory = photo.folder || photo.category;
       return photoCategory !== 'hero' && photoCategory !== 'Hero';
     });
   }, [photos]);
 
-  // Memoized context value to prevent unnecessary re-renders
+  // Memoized context value
   const value = useMemo(() => ({
     photos,
     categories,

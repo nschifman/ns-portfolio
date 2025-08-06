@@ -24,14 +24,32 @@ export default defineConfig({
     },
     target: 'es2015',
     minify: 'esbuild',
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 1000,
+    // Optimize build performance
+    sourcemap: false,
+    // Reduce bundle size
+    cssCodeSplit: true,
+    // Optimize dependencies
+    commonjsOptions: {
+      include: []
+    }
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(__dirname, './src'),
+      'react': path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom')
     }
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom']
+    include: ['react', 'react-dom', 'react-router-dom'],
+    exclude: []
+  },
+  // Performance optimizations
+  esbuild: {
+    drop: ['console', 'debugger']
+  },
+  define: {
+    'process.env.NODE_ENV': '"production"'
   }
 }) 
