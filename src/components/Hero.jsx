@@ -7,8 +7,8 @@ const Hero = () => {
   const { photos, loading, categories } = usePhotos();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
-  // Get hero photos
-  const heroPhotos = photos.filter(photo => photo.category === 'hero');
+  // Get hero photos - use first 3 photos from any category
+  const heroPhotos = photos.slice(0, 3);
   
   // Get category previews (most recent photo from each category)
   const getCategoryPreviews = () => {
@@ -48,7 +48,7 @@ const Hero = () => {
           // Fallback when no hero photos
           <div className="h-full bg-black flex items-center justify-center">
             <div className="text-center">
-                               <h1 className="text-4xl md:text-5xl lg:text-6xl font-light text-white mb-2 text-render-optimized">
+                               <h1 className="text-3xl md:text-4xl lg:text-5xl font-extralight text-white mb-2 text-render-optimized">
                    Noah Schifman
                  </h1>
             </div>
@@ -90,7 +90,7 @@ const Hero = () => {
             {/* Content overlay */}
             <div className="relative z-10 h-full flex items-center justify-center">
               <div className="text-center">
-                                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-light text-white mb-2 drop-shadow-lg text-render-optimized">
+                                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-extralight text-white mb-2 drop-shadow-lg text-render-optimized">
                    Noah Schifman
                  </h1>
               </div>
@@ -148,9 +148,9 @@ const Hero = () => {
                    
                    {/* Category name */}
                    <div className="absolute inset-0 flex items-center justify-center">
-                     <h2 className="text-2xl md:text-3xl lg:text-4xl font-medium text-white drop-shadow-lg text-center px-4 text-render-optimized">
-                       {category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}
-                     </h2>
+                                           <h2 className="text-xl md:text-2xl lg:text-3xl font-light text-white drop-shadow-lg text-center px-4 text-render-optimized">
+                        {category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}
+                      </h2>
                    </div>
                  </Link>
                );
