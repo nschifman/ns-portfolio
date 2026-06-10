@@ -5,13 +5,13 @@
       "description": ""
     },
     {
-      "name": "Sample Landscapes",
-      "description": ""
-    },
-    {
       "name": "Wildlife",
       "description": ""
     }
   ],
-  "photos": {}
+  "photos": {
+    "untitled-0875.jpg": {
+      "categories": []
+    }
+  }
 }
