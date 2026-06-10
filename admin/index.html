@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Noah Schifman</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./admin.css">
+</head>
+<body>
+  <header class="bar">
+    <span class="brand">Site Admin</span>
+    <span id="buildStatus" class="build-status"></span>
+    <button id="signOut" class="ghost hidden">Sign out</button>
+  </header>
+
+  <!-- Sign in -->
+  <section id="signin" class="panel narrow hidden">
+    <h1>Sign in</h1>
+    <p>Paste a GitHub personal access token to manage the site. The token never leaves
+       this browser — it's stored locally on this device only.</p>
+    <input id="tokenInput" type="password" placeholder="github_pat_…" autocomplete="off">
+    <button id="tokenSave" class="primary">Sign in</button>
+    <p id="signinError" class="error"></p>
+    <details>
+      <summary>How to create a token (about 1 minute)</summary>
+      <ol>
+        <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a></li>
+        <li>Name it anything (e.g. "portfolio admin"), set expiration to 1 year</li>
+        <li>Under <b>Repository access</b> choose <b>Only select repositories</b> → pick your portfolio repo</li>
+        <li>Under <b>Permissions → Repository permissions</b>, set <b>Contents</b> to <b>Read and write</b> and <b>Actions</b> to <b>Read-only</b></li>
+        <li>Click <b>Generate token</b> and paste it above</li>
+      </ol>
+    </details>
+  </section>
+
+  <!-- App -->
+  <section id="app" class="hidden">
+    <nav class="tabs">
+      <button class="tab active" data-tab="photos">Photos</button>
+      <button class="tab" data-tab="upload">Upload</button>
+      <button class="tab" data-tab="pages">Pages &amp; Settings</button>
+    </nav>
+
+    <div id="notice" class="notice hidden"></div>
+
+    <!-- Upload tab -->
+    <div id="tab-upload" class="panel tabpane hidden">
+      <h2>Upload photos</h2>
+      <div class="row">
+        <label>Category
+          <select id="uploadCategory"></select>
+        </label>
+        <label>or new category
+          <input id="newCategory" type="text" placeholder="e.g. Landscapes">
+        </label>
+      </div>
+      <div id="dropzone" class="dropzone">
+        <p>Drag &amp; drop photos here<br><span>or</span></p>
+        <button class="primary" id="pickFiles">Choose files</button>
+        <input id="fileInput" type="file" accept=".jpg,.jpeg,.png,.webp" multiple hidden>
+      </div>
+      <ul id="uploadList" class="upload-list"></ul>
+      <button id="uploadGo" class="primary hidden">Upload</button>
+      <p class="hint">Upload full-quality exports — the site automatically optimizes them for the web
+         while keeping originals sharp. Changes go live a couple of minutes after upload.</p>
+    </div>
+
+    <!-- Photos tab -->
+    <div id="tab-photos" class="tabpane">
+      <div class="panel toolbar">
+        <span id="photoCount"></span>
+        <span class="spacer"></span>
+        <select id="bulkMoveTarget" class="hidden"></select>
+        <button id="bulkMove" class="ghost hidden">Move selected</button>
+        <button id="bulkDelete" class="danger hidden">Delete selected</button>
+      </div>
+      <div id="categories"></div>
+    </div>
+
+    <!-- Pages tab -->
+    <div id="tab-pages" class="panel tabpane hidden">
+      <h2>Pages &amp; settings</h2>
+      <label>About page text
+        <textarea id="cfgAbout" rows="7"></textarea>
+      </label>
+      <label>Contact page text
+        <textarea id="cfgContact" rows="4"></textarea>
+      </label>
+      <div class="row">
+        <label>Email <input id="cfgEmail" type="email"></label>
+        <label>Instagram username <input id="cfgInstagram" type="text"></label>
+      </div>
+      <div class="row">
+        <label>Tagline <input id="cfgTagline" type="text"></label>
+        <label>Site description (for Google) <input id="cfgDescription" type="text"></label>
+      </div>
+      <label>Category order — comma separated, optional (others follow alphabetically)
+        <input id="cfgOrder" type="text" placeholder="Concerts, Street, Wildlife">
+      </label>
+      <button id="cfgSave" class="primary">Save changes</button>
+    </div>
+  </section>
+
+  <script src="./admin.js"></script>
+</body>
+</html>
