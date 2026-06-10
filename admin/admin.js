@@ -47,12 +47,28 @@ const b64 = (str) => btoa(unescape(encodeURIComponent(str)));
 const galleryJSON = () => JSON.stringify(gallery, null, 2) + '\n';
 const galleryEntry = () => ({ path: 'gallery.json', mode: '100644', type: 'blob', content: galleryJSON() });
 
-/** Create one commit on main with the given tree changes, always including
- *  the current gallery.json so metadata stays in sync with file changes.
- *  Retries against a fresh tip if the branch moved underneath us (e.g. the
- *  deploy workflow committed optimized photos back), which GitHub rejects as
- *  a non-fast-forward (422). Our change is rebased onto the new tip each try. */
-async function commit(message, extraEntries = []) {
+// All writes run through this chain so the admin never races itself: a second
+// action waits for the first to finish rather than committing concurrently.
+let writeQueue = Promise.resolve();
+function serialize(fn) {
+  const run = writeQueue.then(fn, fn);
+  writeQueue = run.then(
+    () => {},
+    () => {}
+  );
+  return run;
+}
+
+/** Commit to main, serialized against every other admin write. */
+function commit(message, extraEntries = []) {
+  return serialize(() => commitNow(message, extraEntries));
+}
+
+/** One commit on main, always including the current gallery.json so metadata
+ *  stays in sync with file changes. Retries against a fresh tip if the branch
+ *  moved underneath us (another commit landed), which GitHub rejects as a
+ *  non-fast-forward (422); the change is rebuilt onto the new tip each try. */
+async function commitNow(message, extraEntries = []) {
   for (let attempt = 0; ; attempt++) {
     const ref = await gh(`/git/ref/heads/${BRANCH}`);
     const headSha = ref.object.sha;
@@ -69,8 +85,8 @@ async function commit(message, extraEntries = []) {
       await gh(`/git/refs/heads/${BRANCH}`, { method: 'PATCH', body: JSON.stringify({ sha: c.sha }) });
       return;
     } catch (err) {
-      if (err.status === 422 && attempt < 4) {
-        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+      if (err.status === 422 && attempt < 7) {
+        await new Promise((r) => setTimeout(r, 300 * (attempt + 1) + Math.random() * 300));
         continue; // branch moved — rebuild onto the new tip and try again
       }
       throw err;
@@ -459,16 +475,33 @@ function deleteCategory(name) {
 async function saveConfig(message = 'Update site settings') {
   try {
     setBusy(true, 'Saving…');
-    const res = await gh('/contents/site.config.json', {
-      method: 'PUT',
-      body: JSON.stringify({
-        message,
-        content: b64(JSON.stringify(siteConfig, null, 2) + '\n'),
-        sha: configSha,
-        branch: BRANCH,
-      }),
+    // Serialized with commits, and retried if the file sha is stale (409/422)
+    await serialize(async () => {
+      for (let attempt = 0; ; attempt++) {
+        try {
+          const res = await gh('/contents/site.config.json', {
+            method: 'PUT',
+            body: JSON.stringify({
+              message,
+              content: b64(JSON.stringify(siteConfig, null, 2) + '\n'),
+              sha: configSha,
+              branch: BRANCH,
+            }),
+          });
+          configSha = res.content.sha;
+          return;
+        } catch (err) {
+          if ((err.status === 409 || err.status === 422) && attempt < 5) {
+            // Re-read the current sha and try again
+            const cur = await gh(`/contents/site.config.json?ref=${BRANCH}`);
+            configSha = cur.sha;
+            await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+            continue;
+          }
+          throw err;
+        }
+      }
     });
-    configSha = res.content.sha;
     setBusy(false);
     renderPhotos();
     notify('Saved. The site is rebuilding — live in ~2 minutes.');
