@@ -16,7 +16,8 @@ let token = localStorage.getItem(TOKEN_KEY) || '';
 
 let files = []; // [{file, path, sha}] — image files that exist in photos/
 let gallery = { categories: [], photos: {} }; // the manifest
-let photoMap = {}; // "file.jpg" -> {thumb}
+let photoMap = {}; // "file.jpg" -> {thumb} from the last build
+let localThumbs = {}; // "file.jpg" -> object URL, for just-uploaded photos
 let siteConfig = null;
 let configSha = null;
 let pendingFiles = [];
@@ -97,6 +98,16 @@ function setBusy(busy, msg = '') {
   document.body.classList.toggle('busy', busy);
   if (msg) notify(msg);
 }
+function showProgress(done, total, label) {
+  const wrap = $('uploadProgress');
+  wrap.classList.remove('hidden');
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  wrap.querySelector('.bar').style.width = `${pct}%`;
+  wrap.querySelector('.progress-label').textContent = label || `Uploading ${done} of ${total}…`;
+}
+function hideProgress() {
+  $('uploadProgress').classList.add('hidden');
+}
 const sanitizeName = (s) => s.replace(/[^a-zA-Z0-9._ -]/g, '').replace(/\s+/g, '-');
 const cleanCat = (s) => s.trim().replace(/\s+/g, ' ');
 
@@ -174,7 +185,7 @@ function renderPhotos() {
   const g = grid.firstChild;
 
   for (const p of sorted) {
-    const thumb = photoMap[p.file]?.thumb;
+    const thumb = photoMap[p.file]?.thumb || localThumbs[p.file];
     const tags = tagsOf(p.file);
     const card = document.createElement('div');
     card.className = 'card' + (tags.length === 0 ? ' untagged' : '');
@@ -285,42 +296,87 @@ async function toggleTag(file, cat) {
   await runCommit(`Tag ${file}`, [], 'Saved.');
 }
 
+/** Ensure a filename is unique against an existing set (random suffix on clash). */
+function uniqueName(name, set) {
+  if (!set.has(name)) return name;
+  const dot = name.lastIndexOf('.');
+  const base = dot > 0 ? name.slice(0, dot) : name;
+  const ext = dot > 0 ? name.slice(dot) : '';
+  let cand;
+  do {
+    cand = `${base}-${Math.random().toString(36).slice(2, 7)}${ext}`;
+  } while (set.has(cand));
+  return cand;
+}
+
+/** Run async fn over items with limited concurrency, reporting progress. */
+async function mapLimit(items, limit, fn, onProgress) {
+  const results = new Array(items.length);
+  let next = 0;
+  let done = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i], i);
+      onProgress(++done, items.length);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
 async function uploadFiles() {
   if (!pendingFiles.length) return;
   const cats = [...document.querySelectorAll('#uploadCats input:checked')].map((c) =>
     decodeURIComponent(c.value)
   );
+  const batch = pendingFiles;
   try {
-    const entries = [];
-    for (let i = 0; i < pendingFiles.length; i++) {
-      const f = pendingFiles[i];
-      setBusy(true, `Uploading ${i + 1} of ${pendingFiles.length}: ${f.name}…`);
-      let name = sanitizeName(f.name);
-      // Avoid clobbering an existing file
-      const existing = new Set(files.map((x) => x.file));
-      if (existing.has(name)) {
-        const dot = name.lastIndexOf('.');
-        name = `${name.slice(0, dot)}-${Date.now().toString(36)}${name.slice(dot)}`;
-      }
-      const blob = await gh('/git/blobs', {
-        method: 'POST',
-        body: JSON.stringify({ content: await fileToBase64(f), encoding: 'base64' }),
-      });
-      entries.push({ path: `photos/${name}`, mode: '100644', type: 'blob', sha: blob.sha });
-      gallery.photos[name] = { categories: cats };
-    }
-    setBusy(true, 'Committing…');
+    setBusy(true);
+    // Assign unique names up front so parallel workers can't collide
+    const existing = new Set(files.map((x) => x.file));
+    const names = batch.map((f) => {
+      const name = uniqueName(sanitizeName(f.name), existing);
+      existing.add(name);
+      return name;
+    });
+
+    showProgress(0, batch.length);
+    const entries = await mapLimit(
+      batch,
+      4,
+      async (f, i) => {
+        const blob = await gh('/git/blobs', {
+          method: 'POST',
+          body: JSON.stringify({ content: await fileToBase64(f), encoding: 'base64' }),
+        });
+        return { path: `photos/${names[i]}`, mode: '100644', type: 'blob', sha: blob.sha };
+      },
+      (done, total) => showProgress(done, total)
+    );
+
+    // Optimistic previews + tags so the photos show up the instant we reload,
+    // before the next build produces real thumbnails.
+    batch.forEach((f, i) => {
+      gallery.photos[names[i]] = { categories: cats };
+      localThumbs[names[i]] = URL.createObjectURL(f);
+    });
+
+    showProgress(batch.length, batch.length, 'Publishing…');
     const n = entries.length;
     await commit(`Add ${n} photo${n > 1 ? 's' : ''}${cats.length ? ' to ' + cats.join(', ') : ''}`, entries);
+
     pendingFiles = [];
     $('uploadList').innerHTML = '';
     $('uploadGo').classList.add('hidden');
     document.querySelectorAll('#uploadCats input:checked').forEach((c) => (c.checked = false));
     await loadAll();
-    notify(`Uploaded ${n} photo${n > 1 ? 's' : ''}. The site is rebuilding — live in ~2 minutes.`);
+    hideProgress();
+    notify(`Uploaded ${n} photo${n > 1 ? 's' : ''}. They're live here now; the public site updates in ~2 minutes.`);
     watchBuild();
   } catch (err) {
     setBusy(false);
+    hideProgress();
     notify(`Upload failed: ${err.message}`, true);
   }
 }
