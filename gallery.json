@@ -9,47 +9,5 @@
       "description": ""
     }
   ],
-  "photos": {
-    "sample-dusk.jpg": {
-      "categories": [
-        "Sample Landscapes"
-      ]
-    },
-    "sample-ridge.jpg": {
-      "categories": [
-        "Sample Landscapes"
-      ]
-    },
-    "sample-valley.jpg": {
-      "categories": [
-        "Sample Landscapes"
-      ]
-    },
-    "sample-coast.jpg": {
-      "categories": [
-        "Sample Landscapes",
-        "Sample Street"
-      ]
-    },
-    "sample-neon.jpg": {
-      "categories": [
-        "Sample Street"
-      ]
-    },
-    "sample-crossing.jpg": {
-      "categories": [
-        "Sample Street"
-      ]
-    },
-    "sample-rain.jpg": {
-      "categories": [
-        "Sample Street"
-      ]
-    },
-    "sample-late.jpg": {
-      "categories": [
-        "Sample Street"
-      ]
-    }
-  }
+  "photos": {}
 }
