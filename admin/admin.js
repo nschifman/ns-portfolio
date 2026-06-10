@@ -47,20 +47,34 @@ const galleryJSON = () => JSON.stringify(gallery, null, 2) + '\n';
 const galleryEntry = () => ({ path: 'gallery.json', mode: '100644', type: 'blob', content: galleryJSON() });
 
 /** Create one commit on main with the given tree changes, always including
- *  the current gallery.json so metadata stays in sync with file changes. */
+ *  the current gallery.json so metadata stays in sync with file changes.
+ *  Retries against a fresh tip if the branch moved underneath us (e.g. the
+ *  deploy workflow committed optimized photos back), which GitHub rejects as
+ *  a non-fast-forward (422). Our change is rebased onto the new tip each try. */
 async function commit(message, extraEntries = []) {
-  const ref = await gh(`/git/ref/heads/${BRANCH}`);
-  const headSha = ref.object.sha;
-  const head = await gh(`/git/commits/${headSha}`);
-  const tree = await gh('/git/trees', {
-    method: 'POST',
-    body: JSON.stringify({ base_tree: head.tree.sha, tree: [...extraEntries, galleryEntry()] }),
-  });
-  const c = await gh('/git/commits', {
-    method: 'POST',
-    body: JSON.stringify({ message, tree: tree.sha, parents: [headSha] }),
-  });
-  await gh(`/git/refs/heads/${BRANCH}`, { method: 'PATCH', body: JSON.stringify({ sha: c.sha }) });
+  for (let attempt = 0; ; attempt++) {
+    const ref = await gh(`/git/ref/heads/${BRANCH}`);
+    const headSha = ref.object.sha;
+    const head = await gh(`/git/commits/${headSha}`);
+    const tree = await gh('/git/trees', {
+      method: 'POST',
+      body: JSON.stringify({ base_tree: head.tree.sha, tree: [...extraEntries, galleryEntry()] }),
+    });
+    const c = await gh('/git/commits', {
+      method: 'POST',
+      body: JSON.stringify({ message, tree: tree.sha, parents: [headSha] }),
+    });
+    try {
+      await gh(`/git/refs/heads/${BRANCH}`, { method: 'PATCH', body: JSON.stringify({ sha: c.sha }) });
+      return;
+    } catch (err) {
+      if (err.status === 422 && attempt < 4) {
+        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+        continue; // branch moved — rebuild onto the new tip and try again
+      }
+      throw err;
+    }
+  }
 }
 
 function fileToBase64(file) {
