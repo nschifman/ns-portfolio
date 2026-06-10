@@ -1,7 +1,15 @@
 {
   "categories": [
     {
+      "name": "Sample Street",
+      "description": ""
+    },
+    {
       "name": "Sample Landscapes",
+      "description": ""
+    },
+    {
+      "name": "Wildlife",
       "description": ""
     }
   ],
