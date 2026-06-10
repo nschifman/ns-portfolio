@@ -26,6 +26,14 @@ const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
 
 const config = JSON.parse(fs.readFileSync(path.join(ROOT, 'site.config.json'), 'utf8'));
 
+/** Load gallery.json (categories + per-photo tags); tolerate a missing file. */
+function loadGallery() {
+  const p = path.join(ROOT, 'gallery.json');
+  if (!fs.existsSync(p)) return { categories: [], photos: {} };
+  const g = JSON.parse(fs.readFileSync(p, 'utf8'));
+  return { categories: g.categories || [], photos: g.photos || {} };
+}
+
 const slugify = (s) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'category';
 
@@ -130,60 +138,60 @@ async function main() {
   fs.rmSync(DIST, { recursive: true, force: true });
   fs.mkdirSync(path.join(DIST, 'img'), { recursive: true });
 
-  // ---- Scan categories ----------------------------------------------------
-  const categories = [];
-  if (fs.existsSync(PHOTOS_DIR)) {
-    for (const dir of fs.readdirSync(PHOTOS_DIR, { withFileTypes: true })) {
-      if (!dir.isDirectory()) continue;
-      const files = fs
-        .readdirSync(path.join(PHOTOS_DIR, dir.name))
-        .filter((f) => IMAGE_EXTS.has(path.extname(f).toLowerCase()))
-        .sort();
-      if (files.length === 0) continue;
-      categories.push({ name: dir.name, slug: slugify(dir.name), files });
-    }
-  }
+  // ---- Load manifest + scan photos (flat) ---------------------------------
+  const manifest = loadGallery();
+  const files = fs.existsSync(PHOTOS_DIR)
+    ? fs
+        .readdirSync(PHOTOS_DIR, { withFileTypes: true })
+        .filter((e) => e.isFile() && IMAGE_EXTS.has(path.extname(e.name).toLowerCase()))
+        .map((e) => e.name)
+        .sort()
+    : [];
 
-  // Order: explicit config order first, then alphabetical
-  const order = (config.categoryOrder || []).map((c) => c.toLowerCase());
-  categories.sort((a, b) => {
-    const ia = order.indexOf(a.name.toLowerCase());
-    const ib = order.indexOf(b.name.toLowerCase());
-    if (ia !== -1 || ib !== -1) return (ia === -1 ? 1e9 : ia) - (ib === -1 ? 1e9 : ib);
-    return a.name.localeCompare(b.name);
-  });
-
-  // ---- Process photos -----------------------------------------------------
+  // Process each photo once; key the result by filename
   let total = 0;
-  for (const cat of categories) {
-    cat.photos = [];
-    for (const file of cat.files) {
-      const rel = `${cat.name}/${file}`;
-      try {
-        cat.photos.push(await processPhoto(path.join(PHOTOS_DIR, rel), rel));
-        total++;
-      } catch (err) {
-        console.error(`  ! Skipping ${rel}: ${err.message}`);
-      }
+  const byFile = {};
+  for (const file of files) {
+    try {
+      byFile[file] = await processPhoto(path.join(PHOTOS_DIR, file), file);
+      total++;
+    } catch (err) {
+      console.error(`  ! Skipping ${file}: ${err.message}`);
     }
-    // Newest first by EXIF date; undated photos keep filename order at the end
-    cat.photos.sort((a, b) => {
-      if (a.date && b.date) return b.date.localeCompare(a.date);
-      if (a.date) return -1;
-      if (b.date) return 1;
-      return a.file.localeCompare(b.file);
-    });
-    console.log(`  ${cat.name}: ${cat.photos.length} photos`);
   }
-  const nonEmpty = categories.filter((c) => c.photos.length > 0);
+
+  const tagsFor = (file) => manifest.photos[file]?.categories || [];
+
+  // ---- Build categories from manifest order -------------------------------
+  const sortByDate = (a, b) => {
+    if (a.date && b.date) return b.date.localeCompare(a.date);
+    if (a.date) return -1;
+    if (b.date) return 1;
+    return a.file.localeCompare(b.file);
+  };
+
+  const categories = manifest.categories
+    .map((c) => {
+      const name = typeof c === 'string' ? c : c.name;
+      const description = typeof c === 'string' ? '' : c.description || '';
+      const photos = files
+        .filter((f) => byFile[f] && tagsFor(f).includes(name))
+        .map((f) => byFile[f])
+        .sort(sortByDate);
+      return { name, slug: slugify(name), description, photos };
+    })
+    .filter((c) => c.photos.length > 0);
+  for (const cat of categories) console.log(`  ${cat.name}: ${cat.photos.length} photos`);
+  const nonEmpty = categories;
+
+  const untagged = files.filter((f) => byFile[f] && tagsFor(f).length === 0).length;
+  if (untagged) console.log(`  (${untagged} untagged photo(s) hidden from the public site)`);
 
   // ---- Pick hero photo ----------------------------------------------------
-  const all = nonEmpty.flatMap((c) => c.photos.map((p) => ({ ...p, category: c.name })));
+  const tagged = files.filter((f) => byFile[f] && tagsFor(f).length > 0).map((f) => byFile[f]);
   let hero = null;
-  if (config.heroPhoto) hero = all.find((p) => p.rel === config.heroPhoto) || null;
-  if (!hero && all.length) {
-    hero = [...all].sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0];
-  }
+  if (config.heroPhoto) hero = byFile[config.heroPhoto] || null;
+  if (!hero && tagged.length) hero = [...tagged].sort(sortByDate)[0];
 
   // ---- Render pages -------------------------------------------------------
   const ctx = { config, categories: nonEmpty, hero };
@@ -213,10 +221,11 @@ async function main() {
   write('CNAME', `${config.domain}\n`);
   fs.writeFileSync(path.join(DIST, '.nojekyll'), '');
 
-  // Map of source photo -> thumbnail, used by the admin UI for its grid
+  // Map of every photo -> thumbnail, used by the admin UI for its grid
+  // (keyed by bare filename; includes untagged photos so they can be tagged)
   const map = {};
-  for (const cat of nonEmpty)
-    for (const p of cat.photos) map[p.rel] = { thumb: p.thumb, w: p.width, h: p.height };
+  for (const file of files)
+    if (byFile[file]) map[file] = { thumb: byFile[file].thumb, w: byFile[file].width, h: byFile[file].height };
   write('photo-map.json', JSON.stringify(map));
 
   // ---- Static assets ------------------------------------------------------

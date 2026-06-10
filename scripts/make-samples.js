@@ -10,16 +10,22 @@ import sharp from 'sharp';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+// cats = which sample categories each photo belongs to (one is in both)
 const samples = [
-  { cat: 'Sample Landscapes', name: 'sample-dusk', w: 1800, h: 1200, c1: '#1c2a4a', c2: '#9a5b3c' },
-  { cat: 'Sample Landscapes', name: 'sample-ridge', w: 1800, h: 1200, c1: '#0e1a26', c2: '#3e6273' },
-  { cat: 'Sample Landscapes', name: 'sample-valley', w: 1200, h: 1800, c1: '#16261c', c2: '#7a8c52' },
-  { cat: 'Sample Landscapes', name: 'sample-coast', w: 1800, h: 1000, c1: '#101c2e', c2: '#5e7d9a' },
-  { cat: 'Sample Street', name: 'sample-neon', w: 1200, h: 1800, c1: '#1a0f24', c2: '#b3455e' },
-  { cat: 'Sample Street', name: 'sample-crossing', w: 1800, h: 1200, c1: '#141414', c2: '#6b6f78' },
-  { cat: 'Sample Street', name: 'sample-rain', w: 1800, h: 1200, c1: '#0d1420', c2: '#46586e' },
-  { cat: 'Sample Street', name: 'sample-late', w: 1200, h: 1800, c1: '#1f1408', c2: '#b08440' },
+  { name: 'sample-dusk', w: 1800, h: 1200, c1: '#1c2a4a', c2: '#9a5b3c', cats: ['Sample Landscapes'] },
+  { name: 'sample-ridge', w: 1800, h: 1200, c1: '#0e1a26', c2: '#3e6273', cats: ['Sample Landscapes'] },
+  { name: 'sample-valley', w: 1200, h: 1800, c1: '#16261c', c2: '#7a8c52', cats: ['Sample Landscapes'] },
+  { name: 'sample-coast', w: 1800, h: 1000, c1: '#101c2e', c2: '#5e7d9a', cats: ['Sample Landscapes', 'Sample Street'] },
+  { name: 'sample-neon', w: 1200, h: 1800, c1: '#1a0f24', c2: '#b3455e', cats: ['Sample Street'] },
+  { name: 'sample-crossing', w: 1800, h: 1200, c1: '#141414', c2: '#6b6f78', cats: ['Sample Street'] },
+  { name: 'sample-rain', w: 1800, h: 1200, c1: '#0d1420', c2: '#46586e', cats: ['Sample Street'] },
+  { name: 'sample-late', w: 1200, h: 1800, c1: '#1f1408', c2: '#b08440', cats: ['Sample Street'] },
 ];
+
+const photosDir = path.join(ROOT, 'photos');
+fs.mkdirSync(photosDir, { recursive: true });
+
+const gallery = { categories: [{ name: 'Sample Landscapes', description: '' }, { name: 'Sample Street', description: '' }], photos: {} };
 
 for (const s of samples) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s.w}" height="${s.h}">
@@ -40,10 +46,11 @@ for (const s of samples) {
       fill="#ffffff" fill-opacity="0.55">SAMPLE</text>
   </svg>`;
 
-  const dir = path.join(ROOT, 'photos', s.cat);
-  fs.mkdirSync(dir, { recursive: true });
-  const out = path.join(dir, `${s.name}.jpg`);
-  await sharp(Buffer.from(svg)).jpeg({ quality: 80, mozjpeg: true }).toFile(out);
-  console.log(`  ${s.cat}/${s.name}.jpg (${s.w}x${s.h})`);
+  const file = `${s.name}.jpg`;
+  await sharp(Buffer.from(svg)).jpeg({ quality: 80, mozjpeg: true }).toFile(path.join(photosDir, file));
+  gallery.photos[file] = { categories: s.cats };
+  console.log(`  ${file} (${s.w}x${s.h}) → ${s.cats.join(', ')}`);
 }
-console.log('Sample photos generated.');
+
+fs.writeFileSync(path.join(ROOT, 'gallery.json'), JSON.stringify(gallery, null, 2) + '\n');
+console.log('Sample photos + gallery.json generated.');

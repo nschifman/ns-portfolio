@@ -7,7 +7,7 @@ hosts it, and the domain points here through Cloudflare DNS.
 ## How it works
 
 ```
-/admin (private UI) ──GitHub API──▶  photos/<Category>/*.jpg  +  site.config.json
+/admin (private UI) ──GitHub API──▶  photos/*.jpg  +  gallery.json  +  site.config.json
                                             │
                             GitHub Action (every push to main)
                                             │  compress originals → generate WebP
@@ -16,8 +16,11 @@ hosts it, and the domain points here through Cloudflare DNS.
                                 GitHub Pages → noahschifman.com
 ```
 
-- **A folder inside `photos/` = a category on the site.** Add a folder, it shows up
-  in the nav. Photos sort newest-first by the date they were taken (EXIF).
+- **Photos live flat in `photos/`. Categories are tags**, defined in `gallery.json`.
+  A single photo can belong to several categories at once. Add, rename, delete, and
+  reorder categories from the admin page — nothing moves on disk.
+- Within a category, photos sort newest-first by the date they were taken (EXIF).
+- A photo with no categories stays hidden from the public site until you tag it.
 - Every change to `main` redeploys the site automatically (~2 minutes).
 - Huge uploads are fine: CI re-compresses anything over 3000px / 4MB in place so
   the repo stays small, while the site serves crisp WebP up to 2560px.
@@ -26,9 +29,11 @@ hosts it, and the domain points here through Cloudflare DNS.
 
 Go to **noahschifman.com/admin**. From there you can:
 
-- **Upload photos** — drag & drop, pick or create a category
-- **Delete / move photos**, rename or delete categories, pick the homepage hero (★)
-- **Edit the About and Contact pages**, tagline, email, Instagram, category order
+- **Upload photos** — drag & drop, and tick which categories to tag them with
+- **Tag / untag photos** (each photo shows toggle chips for every category), delete
+  photos, pick the homepage hero (★)
+- **Manage categories** — add, rename, delete, and reorder them in the Categories tab
+- **Edit the About and Contact pages**, tagline, email, Instagram
 
 ### One-time setup: create your access token
 
@@ -48,8 +53,9 @@ the site from, and once a year when it expires.
 
 The admin page is just a convenience — everything also works directly:
 
-- Upload: on github.com, open `photos/<Category>/` → *Add file → Upload files*
-- Delete/move: edit files in the repo however you like
+- Upload: on github.com, open the `photos/` folder → *Add file → Upload files*
+- Categories/tags: edit `gallery.json` (a list of categories, plus a map of each
+  photo filename to the categories it belongs to)
 - Pages/text: edit `site.config.json`
 
 ## First-time launch checklist
@@ -75,7 +81,8 @@ npm run dev        # builds into dist/ and serves it locally
 ## Repo layout
 
 ```
-photos/<Category>/        the photo library (source of truth)
+photos/                   the photo library, flat (source of truth for files)
+gallery.json              categories + which categories each photo is tagged with
 site.config.json          all site text & settings (edited by /admin)
 admin/                    the private management UI (static, token-based)
 scripts/build.js          static site generator (sharp + exifr)

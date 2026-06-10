@@ -136,6 +136,7 @@ export function categoryPage(ctx, cat) {
   const items = cat.photos.map((p, i) => photoItem(p, { eager: i < 4 })).join('\n');
   const body = `    <section class="page-head">
       <h1>${esc(cat.name)}</h1>
+      ${cat.description ? `<p class="page-sub">${esc(cat.description)}</p>` : ''}
     </section>
     <section class="gallery" data-lightbox>
 ${items}

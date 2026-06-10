@@ -1,7 +1,8 @@
 /*
- * Admin UI: manages photos/ and site.config.json directly through the GitHub
- * REST API. Every change is a commit to main, which triggers the deploy
- * workflow — the live site updates a couple of minutes later.
+ * Admin UI: manages the flat photos/ directory and gallery.json (categories +
+ * per-photo tags) directly through the GitHub API. Every change is a commit to
+ * main, which triggers the deploy workflow — the live site updates a couple of
+ * minutes later.
  */
 const OWNER = 'nschifman';
 const REPO = 'ns-portfolio';
@@ -12,10 +13,12 @@ const IMAGE_EXTS = /\.(jpe?g|png|webp)$/i;
 
 const $ = (id) => document.getElementById(id);
 let token = localStorage.getItem(TOKEN_KEY) || '';
-let photos = []; // [{path, category, name, sha}]
-let photoMap = {}; // "Category/file.jpg" -> {thumb}
-let configSha = null;
+
+let files = []; // [{file, path, sha}] — image files that exist in photos/
+let gallery = { categories: [], photos: {} }; // the manifest
+let photoMap = {}; // "file.jpg" -> {thumb}
 let siteConfig = null;
+let configSha = null;
 let pendingFiles = [];
 
 // ---------------------------------------------------------------- API helpers
@@ -32,28 +35,32 @@ async function gh(path, opts = {}) {
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`GitHub API ${res.status}: ${body.slice(0, 200)}`);
+    const err = new Error(`GitHub API ${res.status}: ${body.slice(0, 200)}`);
+    err.status = res.status;
+    throw err;
   }
   return res.status === 204 ? null : res.json();
 }
 
-/** Create one commit on main containing the given tree changes. */
-async function commitTree(message, treeEntries) {
+const b64 = (str) => btoa(unescape(encodeURIComponent(str)));
+const galleryJSON = () => JSON.stringify(gallery, null, 2) + '\n';
+const galleryEntry = () => ({ path: 'gallery.json', mode: '100644', type: 'blob', content: galleryJSON() });
+
+/** Create one commit on main with the given tree changes, always including
+ *  the current gallery.json so metadata stays in sync with file changes. */
+async function commit(message, extraEntries = []) {
   const ref = await gh(`/git/ref/heads/${BRANCH}`);
   const headSha = ref.object.sha;
   const head = await gh(`/git/commits/${headSha}`);
   const tree = await gh('/git/trees', {
     method: 'POST',
-    body: JSON.stringify({ base_tree: head.tree.sha, tree: treeEntries }),
+    body: JSON.stringify({ base_tree: head.tree.sha, tree: [...extraEntries, galleryEntry()] }),
   });
-  const commit = await gh('/git/commits', {
+  const c = await gh('/git/commits', {
     method: 'POST',
     body: JSON.stringify({ message, tree: tree.sha, parents: [headSha] }),
   });
-  await gh(`/git/refs/heads/${BRANCH}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ sha: commit.sha }),
-  });
+  await gh(`/git/refs/heads/${BRANCH}`, { method: 'PATCH', body: JSON.stringify({ sha: c.sha }) });
 }
 
 function fileToBase64(file) {
@@ -72,124 +79,164 @@ function notify(msg, isError = false) {
   el.classList.toggle('error', isError);
   el.classList.toggle('hidden', !msg);
 }
-
 function setBusy(busy, msg = '') {
   document.body.classList.toggle('busy', busy);
   if (msg) notify(msg);
 }
+const sanitizeName = (s) => s.replace(/[^a-zA-Z0-9._ -]/g, '').replace(/\s+/g, '-');
+const cleanCat = (s) => s.trim().replace(/\s+/g, ' ');
 
-const slugify = (s) => s.trim().replace(/\s+/g, ' ');
-const sanitizeName = (s) =>
-  s.replace(/[^a-zA-Z0-9._ -]/g, '').replace(/\s+/g, '-');
+const categoryNames = () => gallery.categories.map((c) => (typeof c === 'string' ? c : c.name));
+const tagsOf = (file) => gallery.photos[file]?.categories || [];
 
 // ---------------------------------------------------------------- Data load
 async function loadAll() {
   setBusy(true, 'Loading…');
   const tree = await gh(`/git/trees/${BRANCH}?recursive=1`);
-  photos = tree.tree
-    .filter((e) => e.type === 'blob' && e.path.startsWith('photos/') && IMAGE_EXTS.test(e.path))
-    .map((e) => {
-      const [, category, ...rest] = e.path.split('/');
-      return { path: e.path, category, name: rest.join('/'), sha: e.sha };
-    });
+  files = tree.tree
+    .filter((e) => e.type === 'blob' && /^photos\/[^/]+$/.test(e.path) && IMAGE_EXTS.test(e.path))
+    .map((e) => ({ file: e.path.slice('photos/'.length), path: e.path, sha: e.sha }));
 
-  const cfgEntry = tree.tree.find((e) => e.path === 'site.config.json');
-  configSha = cfgEntry?.sha || null;
-  const cfgRes = await gh(`/contents/site.config.json?ref=${BRANCH}`);
-  siteConfig = JSON.parse(atob(cfgRes.content.replace(/\n/g, '')));
-  configSha = cfgRes.sha;
-
-  // Thumbnails come from the live site's build output; brand-new photos
-  // won't have one until the next deploy finishes.
+  // gallery.json (may not exist yet)
   try {
-    photoMap = await fetch('/photo-map.json', { cache: 'no-store' }).then((r) =>
-      r.ok ? r.json() : {}
-    );
+    const g = await gh(`/contents/gallery.json?ref=${BRANCH}`);
+    const parsed = JSON.parse(atob(g.content.replace(/\n/g, '')));
+    gallery = { categories: parsed.categories || [], photos: parsed.photos || {} };
+  } catch (err) {
+    if (err.status === 404) gallery = { categories: [], photos: {} };
+    else throw err;
+  }
+  // Normalize category entries to {name, description}
+  gallery.categories = gallery.categories.map((c) =>
+    typeof c === 'string' ? { name: c, description: '' } : { name: c.name, description: c.description || '' }
+  );
+
+  // site.config.json
+  const cfg = await gh(`/contents/site.config.json?ref=${BRANCH}`);
+  siteConfig = JSON.parse(atob(cfg.content.replace(/\n/g, '')));
+  configSha = cfg.sha;
+
+  // Thumbnails from the last build (new photos won't have one until next deploy)
+  try {
+    photoMap = await fetch('/photo-map.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : {}));
   } catch {
     photoMap = {};
   }
 
   renderPhotos();
+  renderCategories();
+  renderUploadCats();
   renderConfig();
-  renderCategoryPickers();
   setBusy(false);
   notify('');
 }
 
-function categoryNames() {
-  return [...new Set(photos.map((p) => p.category))].sort((a, b) => a.localeCompare(b));
-}
-
 // ---------------------------------------------------------------- Rendering
-function renderCategoryPickers() {
-  const cats = categoryNames();
-  const opts = cats.map((c) => `<option value="${c}">${c}</option>`).join('');
-  $('uploadCategory').innerHTML = opts || '<option value="">(create one →)</option>';
-  $('bulkMoveTarget').innerHTML = opts;
+function renderUploadCats() {
+  $('uploadCats').innerHTML =
+    categoryNames()
+      .map(
+        (c) =>
+          `<label class="chip"><input type="checkbox" value="${encodeURIComponent(c)}"><span>${c}</span></label>`
+      )
+      .join('') || '<span class="muted">No categories yet — add one below or in the Categories tab.</span>';
 }
 
 function renderPhotos() {
-  const root = $('categories');
+  const grid = $('photoGrid');
   const cats = categoryNames();
-  $('photoCount').textContent = `${photos.length} photos in ${cats.length} categories`;
-  root.innerHTML = '';
+  $('photoCount').textContent = `${files.length} photos · ${cats.length} categories`;
 
-  for (const cat of cats) {
-    const catPhotos = photos.filter((p) => p.category === cat);
-    const section = document.createElement('section');
-    section.className = 'panel cat';
-    section.innerHTML = `
-      <div class="cat-head">
-        <h2>${cat} <em>${catPhotos.length}</em></h2>
-        <button class="ghost cat-rename">Rename</button>
-        <button class="danger cat-delete">Delete category</button>
-      </div>
-      <div class="grid"></div>`;
+  // Untagged first so they stand out, then alphabetical
+  const sorted = [...files].sort((a, b) => {
+    const ua = tagsOf(a.file).length === 0;
+    const ub = tagsOf(b.file).length === 0;
+    if (ua !== ub) return ua ? -1 : 1;
+    return a.file.localeCompare(b.file);
+  });
 
-    section.querySelector('.cat-rename').onclick = () => renameCategory(cat);
-    section.querySelector('.cat-delete').onclick = () => deleteCategory(cat);
+  grid.className = 'panel';
+  grid.innerHTML = '<div class="grid"></div>';
+  const g = grid.firstChild;
 
-    const grid = section.querySelector('.grid');
-    for (const p of catPhotos) {
-      const thumb = photoMap[p.path.replace(/^photos\//, '')]?.thumb;
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <label class="thumb">
-          <input type="checkbox" data-path="${p.path}">
-          ${thumb ? `<img src="${thumb}" loading="lazy" alt="">` : '<span class="nothumb">processing…</span>'}
-        </label>
-        <div class="card-meta">
-          <span title="${p.name}">${p.name}</span>
-          <span class="card-actions">
-            <button class="ghost set-hero" title="Use as homepage hero">★</button>
-            <button class="danger del" title="Delete">✕</button>
-          </span>
-        </div>`;
-      if (siteConfig?.heroPhoto === p.path.replace(/^photos\//, ''))
-        card.querySelector('.set-hero').classList.add('active');
-      card.querySelector('.del').onclick = () => deletePhotos([p.path]);
-      card.querySelector('.set-hero').onclick = () => setHero(p);
-      grid.appendChild(card);
+  for (const p of sorted) {
+    const thumb = photoMap[p.file]?.thumb;
+    const tags = tagsOf(p.file);
+    const card = document.createElement('div');
+    card.className = 'card' + (tags.length === 0 ? ' untagged' : '');
+    card.innerHTML = `
+      <label class="thumb">
+        <input type="checkbox" class="sel" data-file="${p.file}">
+        ${thumb ? `<img src="${thumb}" loading="lazy" alt="">` : '<span class="nothumb">processing…</span>'}
+        ${tags.length === 0 ? '<span class="badge">untagged</span>' : ''}
+      </label>
+      <div class="card-tags"></div>
+      <div class="card-meta">
+        <span title="${p.file}">${p.file}</span>
+        <span class="card-actions">
+          <button class="ghost set-hero" title="Use as homepage hero">★</button>
+          <button class="danger del" title="Delete">✕</button>
+        </span>
+      </div>`;
+
+    const tagWrap = card.querySelector('.card-tags');
+    for (const c of cats) {
+      const on = tags.includes(c);
+      const b = document.createElement('button');
+      b.className = 'tag' + (on ? ' on' : '');
+      b.textContent = c;
+      b.onclick = () => toggleTag(p.file, c);
+      tagWrap.appendChild(b);
     }
-    root.appendChild(section);
+
+    if (siteConfig?.heroPhoto === p.file) card.querySelector('.set-hero').classList.add('active');
+    card.querySelector('.del').onclick = () => deletePhotos([p.file]);
+    card.querySelector('.set-hero').onclick = () => setHero(p.file);
+    g.appendChild(card);
   }
 
-  root.addEventListener('change', updateBulkButtons);
-  updateBulkButtons();
+  g.addEventListener('change', (e) => {
+    if (e.target.classList.contains('sel')) updateBulk();
+  });
+  $('bulkCat').innerHTML = cats.map((c) => `<option value="${encodeURIComponent(c)}">${c}</option>`).join('');
+  updateBulk();
 }
 
-function selectedPaths() {
-  return [...document.querySelectorAll('#categories input[type=checkbox]:checked')].map(
-    (c) => c.dataset.path
-  );
+function selected() {
+  return [...document.querySelectorAll('#photoGrid .sel:checked')].map((c) => c.dataset.file);
 }
-
-function updateBulkButtons() {
-  const any = selectedPaths().length > 0;
+function updateBulk() {
+  const any = selected().length > 0;
+  const hasCats = categoryNames().length > 0;
   $('bulkDelete').classList.toggle('hidden', !any);
-  $('bulkMove').classList.toggle('hidden', !any);
-  $('bulkMoveTarget').classList.toggle('hidden', !any);
+  $('bulkAdd').classList.toggle('hidden', !any || !hasCats);
+  $('bulkRemove').classList.toggle('hidden', !any || !hasCats);
+  $('bulkCat').classList.toggle('hidden', !any || !hasCats);
+}
+
+function renderCategories() {
+  const list = $('categoryList');
+  list.innerHTML = '';
+  gallery.categories.forEach((c, i) => {
+    const count = files.filter((f) => tagsOf(f.file).includes(c.name)).length;
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <span class="cat-name">${c.name}</span>
+      <em class="cat-count">${count}</em>
+      <span class="cat-ctrls">
+        <button class="ghost up" ${i === 0 ? 'disabled' : ''} title="Move up">↑</button>
+        <button class="ghost down" ${i === gallery.categories.length - 1 ? 'disabled' : ''} title="Move down">↓</button>
+        <button class="ghost rename">Rename</button>
+        <button class="danger del">Delete</button>
+      </span>`;
+    li.querySelector('.up').onclick = () => moveCategory(i, -1);
+    li.querySelector('.down').onclick = () => moveCategory(i, 1);
+    li.querySelector('.rename').onclick = () => renameCategory(c.name);
+    li.querySelector('.del').onclick = () => deleteCategory(c.name);
+    list.appendChild(li);
+  });
+  if (!gallery.categories.length)
+    list.innerHTML = '<li class="muted">No categories yet. Add one below.</li>';
 }
 
 function renderConfig() {
@@ -199,40 +246,64 @@ function renderConfig() {
   $('cfgInstagram').value = siteConfig.instagram || '';
   $('cfgTagline').value = siteConfig.tagline || '';
   $('cfgDescription').value = siteConfig.description || '';
-  $('cfgOrder').value = (siteConfig.categoryOrder || []).join(', ');
 }
 
-// ---------------------------------------------------------------- Actions
-async function uploadFiles() {
-  const cat = slugify($('newCategory').value) || $('uploadCategory').value;
-  if (!cat) return notify('Pick or create a category first.', true);
-  if (!pendingFiles.length) return;
+// ---------------------------------------------------------------- Photo actions
+async function runCommit(message, extraEntries, okMsg) {
+  try {
+    setBusy(true, 'Saving…');
+    await commit(message, extraEntries);
+    await loadAll();
+    notify(okMsg + ' The site is rebuilding — live in ~2 minutes.');
+    watchBuild();
+  } catch (err) {
+    setBusy(false);
+    notify(`Failed: ${err.message}`, true);
+  }
+}
 
+async function toggleTag(file, cat) {
+  const entry = (gallery.photos[file] ||= { categories: [] });
+  entry.categories = entry.categories || [];
+  const i = entry.categories.indexOf(cat);
+  if (i === -1) entry.categories.push(cat);
+  else entry.categories.splice(i, 1);
+  await runCommit(`Tag ${file}`, [], 'Saved.');
+}
+
+async function uploadFiles() {
+  if (!pendingFiles.length) return;
+  const cats = [...document.querySelectorAll('#uploadCats input:checked')].map((c) =>
+    decodeURIComponent(c.value)
+  );
   try {
     const entries = [];
     for (let i = 0; i < pendingFiles.length; i++) {
       const f = pendingFiles[i];
       setBusy(true, `Uploading ${i + 1} of ${pendingFiles.length}: ${f.name}…`);
+      let name = sanitizeName(f.name);
+      // Avoid clobbering an existing file
+      const existing = new Set(files.map((x) => x.file));
+      if (existing.has(name)) {
+        const dot = name.lastIndexOf('.');
+        name = `${name.slice(0, dot)}-${Date.now().toString(36)}${name.slice(dot)}`;
+      }
       const blob = await gh('/git/blobs', {
         method: 'POST',
         body: JSON.stringify({ content: await fileToBase64(f), encoding: 'base64' }),
       });
-      entries.push({
-        path: `photos/${cat}/${sanitizeName(f.name)}`,
-        mode: '100644',
-        type: 'blob',
-        sha: blob.sha,
-      });
+      entries.push({ path: `photos/${name}`, mode: '100644', type: 'blob', sha: blob.sha });
+      gallery.photos[name] = { categories: cats };
     }
     setBusy(true, 'Committing…');
     const n = entries.length;
-    await commitTree(`Add ${n} photo${n > 1 ? 's' : ''} to ${cat}`, entries);
+    await commit(`Add ${n} photo${n > 1 ? 's' : ''}${cats.length ? ' to ' + cats.join(', ') : ''}`, entries);
     pendingFiles = [];
     $('uploadList').innerHTML = '';
     $('uploadGo').classList.add('hidden');
-    $('newCategory').value = '';
+    document.querySelectorAll('#uploadCats input:checked').forEach((c) => (c.checked = false));
     await loadAll();
-    notify(`Uploaded ${n} photo${n > 1 ? 's' : ''} to ${cat}. The site is rebuilding — live in ~2 minutes.`);
+    notify(`Uploaded ${n} photo${n > 1 ? 's' : ''}. The site is rebuilding — live in ~2 minutes.`);
     watchBuild();
   } catch (err) {
     setBusy(false);
@@ -240,101 +311,89 @@ async function uploadFiles() {
   }
 }
 
-async function deletePhotos(paths) {
-  const n = paths.length;
-  if (!confirm(`Delete ${n} photo${n > 1 ? 's' : ''} from the site? This can't be undone from here.`))
+async function deletePhotos(fileNames) {
+  const n = fileNames.length;
+  if (!confirm(`Delete ${n} photo${n > 1 ? 's' : ''}? This can't be undone from here.`)) return;
+  for (const f of fileNames) delete gallery.photos[f];
+  const entries = fileNames.map((f) => ({ path: `photos/${f}`, mode: '100644', type: 'blob', sha: null }));
+  await runCommit(`Remove ${n} photo${n > 1 ? 's' : ''}`, entries, `Deleted ${n} photo${n > 1 ? 's' : ''}.`);
+}
+
+async function setHero(file) {
+  siteConfig.heroPhoto = file;
+  await saveConfig(`Set hero photo to ${file}`);
+}
+
+// ---------------------------------------------------------------- Bulk actions
+function bulkTag(add) {
+  const cat = decodeURIComponent($('bulkCat').value);
+  const sel = selected();
+  if (!cat || !sel.length) return;
+  for (const f of sel) {
+    const entry = (gallery.photos[f] ||= { categories: [] });
+    entry.categories = entry.categories || [];
+    const i = entry.categories.indexOf(cat);
+    if (add && i === -1) entry.categories.push(cat);
+    if (!add && i !== -1) entry.categories.splice(i, 1);
+  }
+  runCommit(`${add ? 'Tag' : 'Untag'} ${sel.length} photos: ${cat}`, [], 'Saved.');
+}
+
+// ---------------------------------------------------------------- Category actions
+function addCategory(name) {
+  const n = cleanCat(name);
+  if (!n) return;
+  if (categoryNames().some((c) => c.toLowerCase() === n.toLowerCase()))
+    return notify('That category already exists.', true);
+  gallery.categories.push({ name: n, description: '' });
+  runCommit(`Add category ${n}`, [], `Added "${n}".`);
+}
+
+function moveCategory(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= gallery.categories.length) return;
+  const arr = gallery.categories;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  runCommit('Reorder categories', [], 'Reordered.');
+}
+
+function renameCategory(name) {
+  const next = prompt(`Rename category "${name}" to:`, name);
+  if (!next) return;
+  const n = cleanCat(next);
+  if (n === name) return;
+  if (categoryNames().some((c) => c.toLowerCase() === n.toLowerCase()))
+    return notify('That category already exists.', true);
+  const cat = gallery.categories.find((c) => c.name === name);
+  if (cat) cat.name = n;
+  for (const f of Object.keys(gallery.photos)) {
+    const cs = gallery.photos[f].categories;
+    if (cs) gallery.photos[f].categories = cs.map((c) => (c === name ? n : c));
+  }
+  runCommit(`Rename category ${name} to ${n}`, [], `Renamed to "${n}".`);
+}
+
+function deleteCategory(name) {
+  const count = files.filter((f) => tagsOf(f.file).includes(name)).length;
+  if (!confirm(`Delete category "${name}"? ${count} photo(s) will be untagged from it (photos are kept).`))
     return;
-  try {
-    setBusy(true, 'Deleting…');
-    await commitTree(
-      `Remove ${n} photo${n > 1 ? 's' : ''}`,
-      paths.map((p) => ({ path: p, mode: '100644', type: 'blob', sha: null }))
-    );
-    await loadAll();
-    notify(`Deleted ${n} photo${n > 1 ? 's' : ''}. The site is rebuilding.`);
-    watchBuild();
-  } catch (err) {
-    setBusy(false);
-    notify(`Delete failed: ${err.message}`, true);
+  gallery.categories = gallery.categories.filter((c) => c.name !== name);
+  for (const f of Object.keys(gallery.photos)) {
+    const cs = gallery.photos[f].categories;
+    if (cs) gallery.photos[f].categories = cs.filter((c) => c !== name);
   }
+  runCommit(`Delete category ${name}`, [], `Deleted "${name}".`);
 }
 
-async function movePhotos(paths, targetCat) {
-  try {
-    setBusy(true, 'Moving…');
-    const entries = [];
-    for (const path of paths) {
-      const p = photos.find((x) => x.path === path);
-      if (!p || p.category === targetCat) continue;
-      entries.push({ path: `photos/${targetCat}/${p.name}`, mode: '100644', type: 'blob', sha: p.sha });
-      entries.push({ path, mode: '100644', type: 'blob', sha: null });
-    }
-    if (entries.length) await commitTree(`Move ${paths.length} photo(s) to ${targetCat}`, entries);
-    await loadAll();
-    notify('Moved. The site is rebuilding.');
-    watchBuild();
-  } catch (err) {
-    setBusy(false);
-    notify(`Move failed: ${err.message}`, true);
-  }
-}
-
-async function renameCategory(cat) {
-  const next = prompt(`Rename category "${cat}" to:`, cat);
-  if (!next || slugify(next) === cat) return;
-  const target = slugify(next);
-  const paths = photos.filter((p) => p.category === cat).map((p) => p.path);
-  try {
-    setBusy(true, `Renaming ${cat} → ${target}…`);
-    const entries = paths.flatMap((path) => {
-      const p = photos.find((x) => x.path === path);
-      return [
-        { path: `photos/${target}/${p.name}`, mode: '100644', type: 'blob', sha: p.sha },
-        { path, mode: '100644', type: 'blob', sha: null },
-      ];
-    });
-    await commitTree(`Rename category ${cat} to ${target}`, entries);
-    await loadAll();
-    notify(`Renamed to ${target}. The site is rebuilding.`);
-    watchBuild();
-  } catch (err) {
-    setBusy(false);
-    notify(`Rename failed: ${err.message}`, true);
-  }
-}
-
-async function deleteCategory(cat) {
-  const paths = photos.filter((p) => p.category === cat).map((p) => p.path);
-  if (!confirm(`Delete the entire "${cat}" category (${paths.length} photos)?`)) return;
-  try {
-    setBusy(true, 'Deleting category…');
-    await commitTree(
-      `Remove category ${cat}`,
-      paths.map((p) => ({ path: p, mode: '100644', type: 'blob', sha: null }))
-    );
-    await loadAll();
-    notify(`Deleted ${cat}. The site is rebuilding.`);
-    watchBuild();
-  } catch (err) {
-    setBusy(false);
-    notify(`Delete failed: ${err.message}`, true);
-  }
-}
-
-async function setHero(p) {
-  siteConfig.heroPhoto = p.path.replace(/^photos\//, '');
-  await saveConfig(`Set hero photo to ${p.name}`);
-}
-
+// ---------------------------------------------------------------- Site config
 async function saveConfig(message = 'Update site settings') {
   try {
     setBusy(true, 'Saving…');
-    const body = JSON.stringify(siteConfig, null, 2) + '\n';
     const res = await gh('/contents/site.config.json', {
       method: 'PUT',
       body: JSON.stringify({
         message,
-        content: btoa(unescape(encodeURIComponent(body))),
+        content: b64(JSON.stringify(siteConfig, null, 2) + '\n'),
         sha: configSha,
         branch: BRANCH,
       }),
@@ -381,7 +440,7 @@ function watchBuild() {
   if (!buildTimer) buildTimer = setInterval(refreshBuildStatus, 10000);
 }
 
-// ---------------------------------------------------------------- Wiring
+// ---------------------------------------------------------------- Auth + wiring
 function showApp() {
   $('signin').classList.add('hidden');
   $('app').classList.remove('hidden');
@@ -397,7 +456,23 @@ async function trySignIn(t) {
   showApp();
 }
 
-$('tokenSave').onclick = async () => {
+$('loginBtn').onclick = async () => {
+  $('signinError').textContent = '';
+  if (token) {
+    try {
+      await trySignIn(token);
+      return;
+    } catch {
+      localStorage.removeItem(TOKEN_KEY);
+      token = '';
+    }
+  }
+  $('loginBtn').classList.add('hidden');
+  $('tokenRow').classList.remove('hidden');
+  $('tokenInput').focus();
+};
+
+async function submitToken() {
   const t = $('tokenInput').value.trim();
   if (!t) return;
   $('signinError').textContent = '';
@@ -406,9 +481,11 @@ $('tokenSave').onclick = async () => {
   } catch {
     token = '';
     $('signinError').textContent =
-      "That token didn't work. Check it has Contents read/write access to the portfolio repo.";
+      "That token didn't work. Make sure it has Contents read/write access to the repo.";
   }
-};
+}
+$('tokenContinue').onclick = submitToken;
+$('tokenInput').addEventListener('keydown', (e) => e.key === 'Enter' && submitToken());
 
 $('signOut').onclick = () => {
   localStorage.removeItem(TOKEN_KEY);
@@ -418,9 +495,9 @@ $('signOut').onclick = () => {
 document.querySelectorAll('.tab').forEach((btn) => {
   btn.onclick = () => {
     document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('active', b === btn));
-    document.querySelectorAll('.tabpane').forEach((p) => {
-      p.classList.toggle('hidden', p.id !== `tab-${btn.dataset.tab}`);
-    });
+    document.querySelectorAll('.tabpane').forEach((p) =>
+      p.classList.toggle('hidden', p.id !== `tab-${btn.dataset.tab}`)
+    );
   };
 });
 
@@ -438,12 +515,10 @@ dz.addEventListener('drop', (e) => {
   dz.classList.remove('over');
   queueFiles([...e.dataTransfer.files]);
 });
-
-function queueFiles(files) {
-  const ok = files.filter((f) => IMAGE_EXTS.test(f.name));
+function queueFiles(list) {
+  const ok = list.filter((f) => IMAGE_EXTS.test(f.name));
   const tooBig = ok.filter((f) => f.size > 45 * 1024 * 1024);
-  if (tooBig.length)
-    notify(`Skipping ${tooBig.length} file(s) over 45MB — export smaller JPEGs.`, true);
+  if (tooBig.length) notify(`Skipping ${tooBig.length} file(s) over 45MB — export smaller JPEGs.`, true);
   pendingFiles = pendingFiles.concat(ok.filter((f) => f.size <= 45 * 1024 * 1024));
   $('uploadList').innerHTML = pendingFiles
     .map((f) => `<li>${f.name} <em>${(f.size / 1024 / 1024).toFixed(1)}MB</em></li>`)
@@ -451,10 +526,22 @@ function queueFiles(files) {
   $('uploadGo').classList.toggle('hidden', pendingFiles.length === 0);
 }
 $('uploadGo').onclick = uploadFiles;
+$('uploadAddCat').onclick = () => {
+  const n = cleanCat($('uploadNewCat').value);
+  if (n) {
+    addCategory(n);
+    $('uploadNewCat').value = '';
+  }
+};
 
-// Bulk actions
-$('bulkDelete').onclick = () => deletePhotos(selectedPaths());
-$('bulkMove').onclick = () => movePhotos(selectedPaths(), $('bulkMoveTarget').value);
+// Bulk + category wiring
+$('bulkDelete').onclick = () => deletePhotos(selected());
+$('bulkAdd').onclick = () => bulkTag(true);
+$('bulkRemove').onclick = () => bulkTag(false);
+$('addCat').onclick = () => {
+  addCategory($('newCatName').value);
+  $('newCatName').value = '';
+};
 
 // Config save
 $('cfgSave').onclick = () => {
@@ -464,14 +551,10 @@ $('cfgSave').onclick = () => {
   siteConfig.instagram = $('cfgInstagram').value.trim().replace(/^@/, '');
   siteConfig.tagline = $('cfgTagline').value.trim();
   siteConfig.description = $('cfgDescription').value.trim();
-  siteConfig.categoryOrder = $('cfgOrder')
-    .value.split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
   saveConfig();
 };
 
-// Boot
+// Boot — auto-enter if a stored token still works, else show the Login button
 if (token) {
   trySignIn(token).catch(() => {
     localStorage.removeItem(TOKEN_KEY);

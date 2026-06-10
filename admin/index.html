@@ -18,20 +18,22 @@
 
   <!-- Sign in -->
   <section id="signin" class="panel narrow hidden">
-    <h1>Sign in</h1>
-    <p>Paste a GitHub personal access token to manage the site. The token never leaves
-       this browser — it's stored locally on this device only.</p>
-    <input id="tokenInput" type="password" placeholder="github_pat_…" autocomplete="off">
-    <button id="tokenSave" class="primary">Sign in</button>
+    <h1>Welcome back</h1>
+    <p class="muted">Log in to manage your photos and pages.</p>
+    <button id="loginBtn" class="primary big">Log in</button>
+    <div id="tokenRow" class="token-row hidden">
+      <input id="tokenInput" type="password" placeholder="github_pat_…" autocomplete="off">
+      <button id="tokenContinue" class="primary">Continue</button>
+    </div>
     <p id="signinError" class="error"></p>
-    <details>
-      <summary>How to create a token (about 1 minute)</summary>
+    <details id="tokenHelp">
+      <summary>Need an access token?</summary>
       <ol>
         <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a></li>
-        <li>Name it anything (e.g. "portfolio admin"), set expiration to 1 year</li>
-        <li>Under <b>Repository access</b> choose <b>Only select repositories</b> → pick your portfolio repo</li>
-        <li>Under <b>Permissions → Repository permissions</b>, set <b>Contents</b> to <b>Read and write</b> and <b>Actions</b> to <b>Read-only</b></li>
-        <li>Click <b>Generate token</b> and paste it above</li>
+        <li>Name it anything, set expiration to 1 year</li>
+        <li><b>Repository access</b> → <b>Only select repositories</b> → pick your portfolio repo</li>
+        <li><b>Permissions → Repository permissions</b>: <b>Contents</b> = <b>Read and write</b>, <b>Actions</b> = <b>Read-only</b></li>
+        <li><b>Generate token</b>, then click Log in above and paste it</li>
       </ol>
     </details>
   </section>
@@ -41,6 +43,7 @@
     <nav class="tabs">
       <button class="tab active" data-tab="photos">Photos</button>
       <button class="tab" data-tab="upload">Upload</button>
+      <button class="tab" data-tab="categories">Categories</button>
       <button class="tab" data-tab="pages">Pages &amp; Settings</button>
     </nav>
 
@@ -49,14 +52,15 @@
     <!-- Upload tab -->
     <div id="tab-upload" class="panel tabpane hidden">
       <h2>Upload photos</h2>
-      <div class="row">
-        <label>Category
-          <select id="uploadCategory"></select>
-        </label>
-        <label>or new category
-          <input id="newCategory" type="text" placeholder="e.g. Landscapes">
-        </label>
-      </div>
+      <p class="muted">Tag the photos as you add them — you can change tags any time later.</p>
+      <fieldset class="cat-pick">
+        <legend>Add to categories</legend>
+        <div id="uploadCats" class="chips"></div>
+        <div class="add-inline">
+          <input id="uploadNewCat" type="text" placeholder="or type a new category">
+          <button id="uploadAddCat" class="ghost">Add</button>
+        </div>
+      </fieldset>
       <div id="dropzone" class="dropzone">
         <p>Drag &amp; drop photos here<br><span>or</span></p>
         <button class="primary" id="pickFiles">Choose files</button>
@@ -64,8 +68,8 @@
       </div>
       <ul id="uploadList" class="upload-list"></ul>
       <button id="uploadGo" class="primary hidden">Upload</button>
-      <p class="hint">Upload full-quality exports — the site automatically optimizes them for the web
-         while keeping originals sharp. Changes go live a couple of minutes after upload.</p>
+      <p class="hint">Upload full-quality exports — the site optimizes them automatically for the web
+         while keeping them sharp. Changes go live a couple of minutes after upload.</p>
     </div>
 
     <!-- Photos tab -->
@@ -73,11 +77,24 @@
       <div class="panel toolbar">
         <span id="photoCount"></span>
         <span class="spacer"></span>
-        <select id="bulkMoveTarget" class="hidden"></select>
-        <button id="bulkMove" class="ghost hidden">Move selected</button>
+        <select id="bulkCat" class="hidden"></select>
+        <button id="bulkAdd" class="ghost hidden">Tag selected</button>
+        <button id="bulkRemove" class="ghost hidden">Untag selected</button>
         <button id="bulkDelete" class="danger hidden">Delete selected</button>
       </div>
-      <div id="categories"></div>
+      <div id="photoGrid"></div>
+    </div>
+
+    <!-- Categories tab -->
+    <div id="tab-categories" class="panel tabpane hidden">
+      <h2>Categories</h2>
+      <p class="muted">Reorder them (this is the order they appear on the site), rename, or delete.
+         A photo can belong to as many categories as you like.</p>
+      <ul id="categoryList" class="cat-list"></ul>
+      <div class="add-inline">
+        <input id="newCatName" type="text" placeholder="New category name">
+        <button id="addCat" class="primary">Add category</button>
+      </div>
     </div>
 
     <!-- Pages tab -->
@@ -97,9 +114,6 @@
         <label>Tagline <input id="cfgTagline" type="text"></label>
         <label>Site description (for Google) <input id="cfgDescription" type="text"></label>
       </div>
-      <label>Category order — comma separated, optional (others follow alphabetically)
-        <input id="cfgOrder" type="text" placeholder="Concerts, Street, Wildlife">
-      </label>
       <button id="cfgSave" class="primary">Save changes</button>
     </div>
   </section>

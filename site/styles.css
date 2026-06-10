@@ -222,6 +222,15 @@ main { min-height: 80svh; }
   letter-spacing: .34em;
   text-transform: uppercase;
 }
+.page-sub {
+  margin-top: 14px;
+  color: var(--text-dim);
+  font-size: 14px;
+  letter-spacing: .04em;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
 
 /* ---------- Justified gallery ---------- */
 .gallery {
