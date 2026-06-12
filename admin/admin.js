@@ -36,7 +36,11 @@ async function gh(path, opts = {}) {
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    const err = new Error(`GitHub API ${res.status}: ${body.slice(0, 200)}`);
+    const friendly =
+      res.status === 403 && body.includes('not accessible')
+        ? 'Your access token can no longer write to the repo (it may have expired). Sign out, create a fresh token with Contents = Read and write, and log in again.'
+        : `GitHub API ${res.status}: ${body.slice(0, 200)}`;
+    const err = new Error(friendly);
     err.status = res.status;
     throw err;
   }
@@ -556,7 +560,16 @@ function showApp() {
 
 async function trySignIn(t) {
   token = t;
-  await gh(''); // GET the repo — validates token + access
+  // The repo is public, so a bare GET succeeds with any valid token — require
+  // push permission so a read-only/expired-grant token is caught at login,
+  // not on the first save.
+  const repo = await gh('');
+  if (!repo.permissions || !repo.permissions.push) {
+    token = '';
+    const err = new Error('no write access');
+    err.noWrite = true;
+    throw err;
+  }
   localStorage.setItem(TOKEN_KEY, t);
   showApp();
 }
@@ -583,10 +596,11 @@ async function submitToken() {
   $('signinError').textContent = '';
   try {
     await trySignIn(t);
-  } catch {
+  } catch (err) {
     token = '';
-    $('signinError').textContent =
-      "That token didn't work. Make sure it has Contents read/write access to the repo.";
+    $('signinError').textContent = err.noWrite
+      ? 'That token can only read this repo. Create a new one with Contents set to "Read and write" (link below).'
+      : "That token didn't work. Make sure it has Contents read/write access to the repo.";
   }
 }
 $('tokenContinue').onclick = submitToken;
