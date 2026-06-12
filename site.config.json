@@ -7,6 +7,8 @@
   "instagram": "nschify",
   "description": "Photography portfolio of Noah Schifman",
   "about": "Test test",
-  "contact": "Test",
-  "heroPhoto": "untitled-8037.jpg"
+  "contact": "",
+  "heroPhoto": "untitled-8037.jpg",
+  "showAbout": false,
+  "showContact": true
 }
