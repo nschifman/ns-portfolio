@@ -19,8 +19,8 @@ function layout(ctx, { title, description, ogImage, path: pagePath, body, preloa
 
   const navLinks = [
     ...categories.map((c) => ({ href: `/${c.slug}/`, label: c.name })),
-    { href: '/about/', label: 'About' },
-    { href: '/contact/', label: 'Contact' },
+    ...(config.showAbout !== false ? [{ href: '/about/', label: 'About' }] : []),
+    ...(config.showContact !== false ? [{ href: '/contact/', label: 'Contact' }] : []),
   ]
     .map(
       (l) =>

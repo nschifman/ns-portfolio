@@ -281,6 +281,8 @@ function renderCategories() {
 }
 
 function renderConfig() {
+  $('cfgShowAbout').checked = siteConfig.showAbout !== false;
+  $('cfgShowContact').checked = siteConfig.showContact !== false;
   $('cfgAbout').value = siteConfig.about || '';
   $('cfgContact').value = siteConfig.contact || '';
   $('cfgEmail').value = siteConfig.email || '';
@@ -648,6 +650,8 @@ $('addCat').onclick = () => {
 
 // Config save
 $('cfgSave').onclick = () => {
+  siteConfig.showAbout = $('cfgShowAbout').checked;
+  siteConfig.showContact = $('cfgShowContact').checked;
   siteConfig.about = $('cfgAbout').value;
   siteConfig.contact = $('cfgContact').value;
   siteConfig.email = $('cfgEmail').value.trim();

@@ -202,15 +202,23 @@ async function main() {
     fs.writeFileSync(out, html);
   };
 
+  const showAbout = config.showAbout !== false;
+  const showContact = config.showContact !== false;
+
   write('index.html', t.homePage(ctx));
   for (const cat of nonEmpty) write(`${cat.slug}/index.html`, t.categoryPage(ctx, cat));
-  write('about/index.html', t.aboutPage(ctx));
-  write('contact/index.html', t.contactPage(ctx));
+  if (showAbout) write('about/index.html', t.aboutPage(ctx));
+  if (showContact) write('contact/index.html', t.contactPage(ctx));
   write('404.html', t.notFoundPage(ctx));
 
   // ---- Aux files ----------------------------------------------------------
   const base = `https://${config.domain}`;
-  const urls = ['/', ...nonEmpty.map((c) => `/${c.slug}/`), '/about/', '/contact/'];
+  const urls = [
+    '/',
+    ...nonEmpty.map((c) => `/${c.slug}/`),
+    ...(showAbout ? ['/about/'] : []),
+    ...(showContact ? ['/contact/'] : []),
+  ];
   write(
     'sitemap.xml',
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
