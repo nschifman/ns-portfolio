@@ -1,19 +1,13 @@
 {
   "categories": [
     {
-      "name": "Wildlife",
-      "description": ""
-    },
-    {
       "name": "Street",
       "description": ""
     }
   ],
   "photos": {
     "untitled-0875.jpg": {
-      "categories": [
-        "Wildlife"
-      ]
+      "categories": []
     },
     "untitled-8037.jpg": {
       "categories": [
