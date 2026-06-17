@@ -1,18 +1,11 @@
 {
-  "categories": [
-    {
-      "name": "Street",
-      "description": ""
-    }
-  ],
+  "categories": [],
   "photos": {
     "untitled-0875.jpg": {
       "categories": []
     },
     "untitled-8037.jpg": {
-      "categories": [
-        "Street"
-      ]
+      "categories": []
     }
   }
 }
