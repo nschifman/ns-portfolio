@@ -1,8 +1,7 @@
 /*
  * Admin UI: manages the flat photos/ directory and gallery.json (categories +
- * per-photo tags) directly through the GitHub API. Every change is a commit to
- * main, which triggers the deploy workflow — the live site updates a couple of
- * minutes later.
+ * per-photo tags) directly through the GitHub API. Every change is tracked 
+ * locally, then saved in a bulk commit when "Save All Changes" is clicked.
  */
 const OWNER = 'nschifman';
 const REPO = 'ns-portfolio';
@@ -21,6 +20,23 @@ let localThumbs = {}; // "file.jpg" -> object URL, for just-uploaded photos
 let siteConfig = null;
 let configSha = null;
 let pendingFiles = [];
+
+// --- Global Save State ---
+let pendingEntries = []; // Holds uncommitted file additions and deletions
+let hasUnsavedChanges = false;
+
+function markDirty() {
+  hasUnsavedChanges = true;
+  $('globalSaveBtn').classList.remove('hidden');
+}
+
+window.addEventListener('beforeunload', (e) => {
+  if (hasUnsavedChanges) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+// -------------------------
 
 // ---------------------------------------------------------------- API helpers
 async function gh(path, opts = {}) {
@@ -50,9 +66,8 @@ async function gh(path, opts = {}) {
 const b64 = (str) => btoa(unescape(encodeURIComponent(str)));
 const galleryJSON = () => JSON.stringify(gallery, null, 2) + '\n';
 const galleryEntry = () => ({ path: 'gallery.json', mode: '100644', type: 'blob', content: galleryJSON() });
+const configEntry = () => ({ path: 'site.config.json', mode: '100644', type: 'blob', content: JSON.stringify(siteConfig, null, 2) + '\n' });
 
-// All writes run through this chain so the admin never races itself: a second
-// action waits for the first to finish rather than committing concurrently.
 let writeQueue = Promise.resolve();
 function serialize(fn) {
   const run = writeQueue.then(fn, fn);
@@ -68,10 +83,6 @@ function commit(message, extraEntries = []) {
   return serialize(() => commitNow(message, extraEntries));
 }
 
-/** One commit on main, always including the current gallery.json so metadata
- *  stays in sync with file changes. Retries against a fresh tip if the branch
- *  moved underneath us (another commit landed), which GitHub rejects as a
- *  non-fast-forward (422); the change is rebuilt onto the new tip each try. */
 async function commitNow(message, extraEntries = []) {
   for (let attempt = 0; ; attempt++) {
     const ref = await gh(`/git/ref/heads/${BRANCH}`);
@@ -142,7 +153,6 @@ async function loadAll() {
     .filter((e) => e.type === 'blob' && /^photos\/[^/]+$/.test(e.path) && IMAGE_EXTS.test(e.path))
     .map((e) => ({ file: e.path.slice('photos/'.length), path: e.path, sha: e.sha }));
 
-  // gallery.json (may not exist yet)
   try {
     const g = await gh(`/contents/gallery.json?ref=${BRANCH}`);
     const parsed = JSON.parse(atob(g.content.replace(/\n/g, '')));
@@ -151,17 +161,14 @@ async function loadAll() {
     if (err.status === 404) gallery = { categories: [], photos: {} };
     else throw err;
   }
-  // Normalize category entries to {name, description}
   gallery.categories = gallery.categories.map((c) =>
     typeof c === 'string' ? { name: c, description: '' } : { name: c.name, description: c.description || '' }
   );
 
-  // site.config.json
   const cfg = await gh(`/contents/site.config.json?ref=${BRANCH}`);
   siteConfig = JSON.parse(atob(cfg.content.replace(/\n/g, '')));
   configSha = cfg.sha;
 
-  // Thumbnails from the last build (new photos won't have one until next deploy)
   try {
     photoMap = await fetch('/photo-map.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : {}));
   } catch {
@@ -192,7 +199,6 @@ function renderPhotos() {
   const cats = categoryNames();
   $('photoCount').textContent = `${files.length} photos · ${cats.length} categories`;
 
-  // Untagged first so they stand out, then alphabetical
   const sorted = [...files].sort((a, b) => {
     const ua = tagsOf(a.file).length === 0;
     const ub = tagsOf(b.file).length === 0;
@@ -295,30 +301,18 @@ function renderConfig() {
   $('cfgDescription').value = siteConfig.description || '';
 }
 
-// ---------------------------------------------------------------- Photo actions
-async function runCommit(message, extraEntries, okMsg) {
-  try {
-    setBusy(true, 'Saving…');
-    await commit(message, extraEntries);
-    await loadAll();
-    notify(okMsg + ' The site is rebuilding — live in ~2 minutes.');
-    watchBuild();
-  } catch (err) {
-    setBusy(false);
-    notify(`Failed: ${err.message}`, true);
-  }
-}
-
+// ---------------------------------------------------------------- State updates
 async function toggleTag(file, cat) {
   const entry = (gallery.photos[file] ||= { categories: [] });
   entry.categories = entry.categories || [];
   const i = entry.categories.indexOf(cat);
   if (i === -1) entry.categories.push(cat);
   else entry.categories.splice(i, 1);
-  await runCommit(`Tag ${file}`, [], 'Saved.');
+  
+  markDirty();
+  renderPhotos();
 }
 
-/** Ensure a filename is unique against an existing set (random suffix on clash). */
 function uniqueName(name, set) {
   if (!set.has(name)) return name;
   const dot = name.lastIndexOf('.');
@@ -331,7 +325,6 @@ function uniqueName(name, set) {
   return cand;
 }
 
-/** Run async fn over items with limited concurrency, reporting progress. */
 async function mapLimit(items, limit, fn, onProgress) {
   const results = new Array(items.length);
   let next = 0;
@@ -355,7 +348,6 @@ async function uploadFiles() {
   const batch = pendingFiles;
   try {
     setBusy(true);
-    // Assign unique names up front so parallel workers can't collide
     const existing = new Set(files.map((x) => x.file));
     const names = batch.map((f) => {
       const name = uniqueName(sanitizeName(f.name), existing);
@@ -377,25 +369,23 @@ async function uploadFiles() {
       (done, total) => showProgress(done, total)
     );
 
-    // Optimistic previews + tags so the photos show up the instant we reload,
-    // before the next build produces real thumbnails.
     batch.forEach((f, i) => {
       gallery.photos[names[i]] = { categories: cats };
       localThumbs[names[i]] = URL.createObjectURL(f);
+      files.push({ file: names[i], path: `photos/${names[i]}`, sha: entries[i].sha });
     });
 
-    showProgress(batch.length, batch.length, 'Publishing…');
-    const n = entries.length;
-    await commit(`Add ${n} photo${n > 1 ? 's' : ''}${cats.length ? ' to ' + cats.join(', ') : ''}`, entries);
+    pendingEntries.push(...entries);
+    markDirty();
+    renderPhotos();
 
     pendingFiles = [];
     $('uploadList').innerHTML = '';
     $('uploadGo').classList.add('hidden');
     document.querySelectorAll('#uploadCats input:checked').forEach((c) => (c.checked = false));
-    await loadAll();
+    setBusy(false);
     hideProgress();
-    notify(`Uploaded ${n} photo${n > 1 ? 's' : ''}. They're live here now; the public site updates in ~2 minutes.`);
-    watchBuild();
+    notify(`Ready to save. ${entries.length} photo(s) added to the queue.`);
   } catch (err) {
     setBusy(false);
     hideProgress();
@@ -405,15 +395,21 @@ async function uploadFiles() {
 
 async function deletePhotos(fileNames) {
   const n = fileNames.length;
-  if (!confirm(`Delete ${n} photo${n > 1 ? 's' : ''}? This can't be undone from here.`)) return;
+  if (!confirm(`Delete ${n} photo${n > 1 ? 's' : ''}? This will queue them for deletion.`)) return;
+  
   for (const f of fileNames) delete gallery.photos[f];
   const entries = fileNames.map((f) => ({ path: `photos/${f}`, mode: '100644', type: 'blob', sha: null }));
-  await runCommit(`Remove ${n} photo${n > 1 ? 's' : ''}`, entries, `Deleted ${n} photo${n > 1 ? 's' : ''}.`);
+  pendingEntries.push(...entries);
+  
+  files = files.filter(f => !fileNames.includes(f.file));
+  markDirty();
+  renderPhotos();
 }
 
 async function setHero(file) {
   siteConfig.heroPhoto = file;
-  await saveConfig(`Set hero photo to ${file}`);
+  markDirty();
+  renderPhotos();
 }
 
 // ---------------------------------------------------------------- Bulk actions
@@ -428,7 +424,8 @@ function bulkTag(add) {
     if (add && i === -1) entry.categories.push(cat);
     if (!add && i !== -1) entry.categories.splice(i, 1);
   }
-  runCommit(`${add ? 'Tag' : 'Untag'} ${sel.length} photos: ${cat}`, [], 'Saved.');
+  markDirty();
+  renderPhotos();
 }
 
 // ---------------------------------------------------------------- Category actions
@@ -438,7 +435,9 @@ function addCategory(name) {
   if (categoryNames().some((c) => c.toLowerCase() === n.toLowerCase()))
     return notify('That category already exists.', true);
   gallery.categories.push({ name: n, description: '' });
-  runCommit(`Add category ${n}`, [], `Added "${n}".`);
+  markDirty();
+  renderCategories();
+  renderUploadCats();
 }
 
 function moveCategory(i, dir) {
@@ -446,7 +445,8 @@ function moveCategory(i, dir) {
   if (j < 0 || j >= gallery.categories.length) return;
   const arr = gallery.categories;
   [arr[i], arr[j]] = [arr[j], arr[i]];
-  runCommit('Reorder categories', [], 'Reordered.');
+  markDirty();
+  renderCategories();
 }
 
 function renameCategory(name) {
@@ -462,60 +462,25 @@ function renameCategory(name) {
     const cs = gallery.photos[f].categories;
     if (cs) gallery.photos[f].categories = cs.map((c) => (c === name ? n : c));
   }
-  runCommit(`Rename category ${name} to ${n}`, [], `Renamed to "${n}".`);
+  markDirty();
+  renderCategories();
+  renderPhotos();
+  renderUploadCats();
 }
 
 function deleteCategory(name) {
   const count = files.filter((f) => tagsOf(f.file).includes(name)).length;
-  if (!confirm(`Delete category "${name}"? ${count} photo(s) will be untagged from it (photos are kept).`))
+  if (!confirm(`Delete category "${name}"? ${count} photo(s) will be untagged from it.`))
     return;
   gallery.categories = gallery.categories.filter((c) => c.name !== name);
   for (const f of Object.keys(gallery.photos)) {
     const cs = gallery.photos[f].categories;
     if (cs) gallery.photos[f].categories = cs.filter((c) => c !== name);
   }
-  runCommit(`Delete category ${name}`, [], `Deleted "${name}".`);
-}
-
-// ---------------------------------------------------------------- Site config
-async function saveConfig(message = 'Update site settings') {
-  try {
-    setBusy(true, 'Saving…');
-    // Serialized with commits, and retried if the file sha is stale (409/422)
-    await serialize(async () => {
-      for (let attempt = 0; ; attempt++) {
-        try {
-          const res = await gh('/contents/site.config.json', {
-            method: 'PUT',
-            body: JSON.stringify({
-              message,
-              content: b64(JSON.stringify(siteConfig, null, 2) + '\n'),
-              sha: configSha,
-              branch: BRANCH,
-            }),
-          });
-          configSha = res.content.sha;
-          return;
-        } catch (err) {
-          if ((err.status === 409 || err.status === 422) && attempt < 5) {
-            // Re-read the current sha and try again
-            const cur = await gh(`/contents/site.config.json?ref=${BRANCH}`);
-            configSha = cur.sha;
-            await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
-            continue;
-          }
-          throw err;
-        }
-      }
-    });
-    setBusy(false);
-    renderPhotos();
-    notify('Saved. The site is rebuilding — live in ~2 minutes.');
-    watchBuild();
-  } catch (err) {
-    setBusy(false);
-    notify(`Save failed: ${err.message}`, true);
-  }
+  markDirty();
+  renderCategories();
+  renderPhotos();
+  renderUploadCats();
 }
 
 // ---------------------------------------------------------------- Build status
@@ -560,9 +525,6 @@ function showApp() {
 
 async function trySignIn(t) {
   token = t;
-  // The repo is public, so a bare GET succeeds with any valid token — require
-  // push permission so a read-only/expired-grant token is caught at login,
-  // not on the first save.
   const repo = await gh('');
   if (!repo.permissions || !repo.permissions.push) {
     token = '';
@@ -662,7 +624,7 @@ $('addCat').onclick = () => {
   $('newCatName').value = '';
 };
 
-// Config save
+// Config save wiring
 $('cfgSave').onclick = () => {
   siteConfig.showAbout = $('cfgShowAbout').checked;
   siteConfig.showContact = $('cfgShowContact').checked;
@@ -672,10 +634,35 @@ $('cfgSave').onclick = () => {
   siteConfig.instagram = $('cfgInstagram').value.trim().replace(/^@/, '');
   siteConfig.tagline = $('cfgTagline').value.trim();
   siteConfig.description = $('cfgDescription').value.trim();
-  saveConfig();
+  
+  markDirty();
+  notify("Settings queued for save.");
 };
 
-// Boot — auto-enter if a stored token still works, else show the Login button
+// Global Save Execution
+$('globalSaveBtn').onclick = async () => {
+  if (!hasUnsavedChanges) return;
+  try {
+    setBusy(true, 'Saving all changes…');
+    // Combine pending additions/deletions and the full site config
+    const entriesToCommit = [...pendingEntries, configEntry()]; 
+    await commit('Bulk update from admin panel', entriesToCommit);
+    
+    // Clear out pending states
+    pendingEntries = [];
+    hasUnsavedChanges = false;
+    $('globalSaveBtn').classList.add('hidden');
+    
+    await loadAll();
+    notify('Saved. The site is rebuilding — live in ~2 minutes.');
+    watchBuild();
+  } catch (err) {
+    setBusy(false);
+    notify(`Save failed: ${err.message}`, true);
+  }
+};
+
+// Boot
 if (token) {
   trySignIn(token).catch(() => {
     localStorage.removeItem(TOKEN_KEY);
