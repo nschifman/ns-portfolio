@@ -3,14 +3,6 @@
     {
       "name": "Street",
       "description": ""
-    },
-    {
-      "name": "S T R E E T",
-      "description": ""
-    },
-    {
-      "name": "E V E N T S",
-      "description": ""
     }
   ],
   "photos": {
@@ -18,9 +10,7 @@
       "categories": []
     },
     "untitled-8037.jpg": {
-      "categories": [
-        "S T R E E T"
-      ]
+      "categories": []
     }
   }
 }
